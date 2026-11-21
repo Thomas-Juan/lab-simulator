@@ -15,14 +15,22 @@ Made by the [Juan Lab](https://juanlab.org), Uppsala University.
 
 ## Play
 
-**Windows:** double-click `LabSimulator.exe` (built by `build_windows.bat`; not code-signed, so Windows may
-show a "Windows protected your PC" notice the first time: choose *More info*, then *Run anyway*).
+**In a browser:** on [juanlab.org](https://juanlab.org/#games), press *Play in browser*
+(played with the mouse; progress is kept in that browser).
 
-**From source (any system):** install Python 3.10+ and run
-`pip install pygame-ce numpy`, then `python game/main.py`
-(on macOS you can double-click `run_from_source.command`).
+**Download:** the latest Windows and macOS builds are on the
+[Releases page](https://github.com/Thomas-Juan/lab-simulator/releases/latest).
 
-To build a download: `build_windows.bat` on Windows, `build_mac.command` on a Mac.
+- **Windows:** download `LabSimulator-Windows.exe` and double-click it. The program is not
+  code-signed, so Windows may show a "Windows protected your PC" notice the first time:
+  choose *More info*, then *Run anyway*.
+- **macOS (Apple silicon):** download `LabSimulator-macOS.zip`, unzip it, then right-click
+  the app and choose *Open* the first time (the app is not signed by Apple).
+- **Any system, from source:** install Python 3.10+ and run
+  `pip install pygame-ce numpy`, then `python game/main.py`
+  (on macOS you can double-click `run_from_source.command`).
+
+To build the downloads yourself: `build_windows.bat` on Windows, `build_mac.command` on a Mac.
 Pushing a tag such as `v1.0` to GitHub builds both automatically and attaches them to a release
 (see `.github/workflows/release.yml`).
 
@@ -65,8 +73,9 @@ Progress is saved automatically (3 notebooks) in `%APPDATA%\LabSimulator` on Win
 
 ## Code
 
-Plain Python with pygame-ce and numpy; no image or sound files. Everything is drawn and
-synthesised in code, with a realistic rendering layer (`game/real.py`) for lab plastics, glass,
+Plain Python with pygame-ce and numpy; no sound files, and the only images are the logos
+(`game/logo.png`, the game's title, and `game/juanlab.png`, the lab logo shown at start-up).
+Everything else is drawn and synthesised in code, with a realistic rendering layer (`game/real.py`) for lab plastics, glass,
 steel, instrument screens and the photographic lab background.
 
 | File | Contents |

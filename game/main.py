@@ -87,6 +87,41 @@ class Menu:
             draw_text(s, it, r.move(0, -2 if sel else 0).center, 19, INK, center=True, bold=True, vcenter=True)
 
 
+# ====================================================================== splash
+class Splash:
+    """The Juan Lab logo for two seconds at start-up. Any key or click skips it."""
+    overlay = False
+    LENGTH = 150                    # frames, fades included
+    FADE = 24
+
+    def __init__(self, app):
+        self.app = app
+        self.t = 0
+        try:
+            img = pygame.image.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "juanlab.png")).convert_alpha()
+            self.logo = pygame.transform.smoothscale(img, (150, 150))
+        except Exception:
+            self.logo = None
+
+    def update(self, inp):
+        self.t += 1
+        if (inp.pressed or inp.keys or inp.click) and self.t < self.LENGTH - self.FADE:
+            self.t = self.LENGTH - self.FADE
+        if self.t >= self.LENGTH:
+            self.app.stack[-1] = Title(self.app)
+            self.app.fade = 14
+
+    def draw(self, s):
+        s.fill(PAPER)
+        if self.logo is not None:
+            s.blit(self.logo, (W // 2 - 75, 128))
+        draw_text(s, "Juan Lab", (W // 2, 330), 36, INK, center=True, bold=True, vcenter=True)
+        draw_text(s, "Uppsala University", (W // 2, 372), 17, MUTED, center=True, vcenter=True)
+        a = 1 - min(1, self.t / self.FADE, (self.LENGTH - self.t) / self.FADE)
+        if a > 0:
+            gfx.dim(s, int(255 * a), (14, 14, 22))
+
+
 # ====================================================================== title
 class Title:
     overlay = False
@@ -580,7 +615,7 @@ class App:
         self.clock = pygame.time.Clock()
         self.running = True
         self.show_fps = False
-        self.stack = [Title(self)]
+        self.stack = [Title(self) if headless else Splash(self)]
 
     @property
     def slot(self):

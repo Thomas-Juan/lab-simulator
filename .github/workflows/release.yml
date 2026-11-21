@@ -33,14 +33,14 @@ jobs:
         shell: bash
         run: |
           python -m PyInstaller --noconfirm --onefile --windowed --name LabSimulator \
-            --icon game/icon.ico --add-data "game/icon.png;." --add-data "game/logo.png;." --paths game --exclude-module tkinter game/main.py
+            --icon game/icon.ico --add-data "game/icon.png;." --add-data "game/logo.png;." --add-data "game/juanlab.png;." --paths game --exclude-module tkinter game/main.py
           cp dist/LabSimulator.exe "${{ matrix.asset }}"
 
       - name: Build (macOS)
         if: runner.os == 'macOS'
         run: |
           python -m PyInstaller --noconfirm --windowed --name "Lab Simulator" \
-            --icon game/icon.icns --add-data "game/icon.png:." --add-data "game/logo.png:." --paths game --exclude-module tkinter game/main.py
+            --icon game/icon.icns --add-data "game/icon.png:." --add-data "game/logo.png:." --add-data "game/juanlab.png:." --paths game --exclude-module tkinter game/main.py
           ditto -c -k --keepParent "dist/Lab Simulator.app" "${{ matrix.asset }}"
 
       - uses: actions/upload-artifact@v4
