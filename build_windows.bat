@@ -1,0 +1,9 @@
+@echo off
+rem Builds LabSimulator.exe next to this file (needs Python 3.10+).
+rem Temporary build files go to %TEMP% so OneDrive does not lock them.
+cd /d "%~dp0"
+python -m pip install --user pygame-ce numpy pyinstaller
+python -m PyInstaller --noconfirm --onefile --windowed --name LabSimulator --exclude-module tkinter --exclude-module PIL ^
+  --icon "%~dp0game\icon.ico" --add-data "%~dp0game\icon.png;." --add-data "%~dp0game\logo.png;." --paths "%~dp0game" --distpath "%~dp0." ^
+  --workpath "%TEMP%\labsimbuild" --specpath "%TEMP%\labsimbuild" "%~dp0game\main.py"
+pause

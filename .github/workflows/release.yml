@@ -1,0 +1,67 @@
+# Builds the Windows .exe and the macOS app and attaches them to a GitHub Release.
+# Runs when a tag such as v1.0 is pushed, or by hand from the Actions tab (build only).
+name: Build and release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            asset: LabSimulator-Windows.exe
+          - os: macos-latest
+            asset: LabSimulator-macOS.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pygame-ce numpy pyinstaller
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          python -m PyInstaller --noconfirm --onefile --windowed --name LabSimulator \
+            --icon game/icon.ico --add-data "game/icon.png;." --add-data "game/logo.png;." --paths game --exclude-module tkinter game/main.py
+          cp dist/LabSimulator.exe "${{ matrix.asset }}"
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          python -m PyInstaller --noconfirm --windowed --name "Lab Simulator" \
+            --icon game/icon.icns --add-data "game/icon.png:." --add-data "game/logo.png:." --paths game --exclude-module tkinter game/main.py
+          ditto -c -k --keepParent "dist/Lab Simulator.app" "${{ matrix.asset }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --title "Lab Simulator $TAG" \
+            --notes "Windows: download the .exe and run it (Windows may ask for confirmation the first time). macOS (Apple silicon): unzip, then right-click the app and choose Open the first time." \
+            || gh release upload "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --clobber
