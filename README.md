@@ -30,7 +30,7 @@ Made by the [Juan Lab](https://juanlab.org), Uppsala University.
   `pip install pygame-ce numpy`, then `python game/main.py`
   (on macOS you can double-click `run_from_source.command`).
 
-To build the downloads yourself: `build_windows.bat` on Windows, `build_mac.command` on a Mac.
+To build the downloads yourself: `build_windows.bat` on Windows (the program goes to `dist/`), `build_mac.command` on a Mac (to `dist-mac/`).
 Pushing a tag such as `v1.0` to GitHub builds both automatically and attaches them to a release
 (see `.github/workflows/release.yml`).
 
@@ -90,9 +90,9 @@ steel, instrument screens and the photographic lab background.
 | `game/techniques.py` | Gathers the 20 techniques and sets each one's track (genre, tempo, key, sound) |
 | `game/gfx.py`, `game/render.py` | Drawing: anti-aliased shapes, shading, soft shadows, glows, procedural textures, lab objects, backgrounds |
 | `game/core.py` | Palette, input, text, saving |
-| `logo/` | Logo masters (`emblem.svg`, `logo.svg`) and renders; `python make_icon.py` makes the game icons and title logo from them |
+| `logo/` | Logo masters (`emblem.svg`, `logo.svg`) and renders; `python tools/make_icon.py` makes the game icons and title logo from them |
 | `tests/run_stages.py` | Plays every minigame with random input and checks it finishes |
 | `tests/run_game.py` | Plays the whole game headless |
 
 Run the tests from this folder: `python tests/run_stages.py` and `python tests/run_game.py`.
-After changing a technique, `python make_design.py` regenerates DESIGN.md.
+After changing a technique, `python tools/make_design.py` regenerates DESIGN.md.

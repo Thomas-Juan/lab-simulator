@@ -12,7 +12,7 @@ To re-render the PNGs after editing an SVG (Windows):
 import os
 from PIL import Image
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the game folder, one level up
 LOGO = os.path.join(HERE, "logo")
 GAME = os.path.join(HERE, "game")
 

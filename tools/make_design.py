@@ -4,7 +4,7 @@ import os
 import sys
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
-HERE = os.path.dirname(os.path.abspath(__file__))
+HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))   # the game folder, one level up
 sys.path.insert(0, os.path.join(HERE, "game"))
 import core  # noqa: E402
 from techniques import TECHS, WINGS  # noqa: E402
