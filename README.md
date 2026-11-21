@@ -8,7 +8,8 @@ do the technique yourself: find the reagents in the freezer before your fingers 
 calculate a master mix that does not run out, load a gel without shaking, stop the
 electrophoresis before the dye runs off the end, sort cells, focus a microscope, inject a
 zebrafish embryo before it divides. Every step ends with a true fact about the technique,
-and every technique has its own music.
+and every technique has its own track (funk, house, trance, drum and bass, cinematic,
+trip-hop and more), synthesised in code and arranged with an intro, a build and a drop.
 
 Made by the [Juan Lab](https://juanlab.org), Uppsala University.
 
@@ -74,10 +75,10 @@ steel, instrument screens and the photographic lab background.
 | `game/board.py` | The board, dice, special benches |
 | `game/station.py` | Runs one technique: intro, steps, results |
 | `game/stage.py` | Minigame base class and the shared types (quiz, order, calc, stop, match) |
-| `game/techniques.py` | Gathers the 20 techniques from the four wing modules |
 | `game/tech_dna.py`, `tech_genes.py`, `tech_proteins.py`, `tech_cells.py` | The four wings, each gathering five per-technique modules (`dna_pcr.py`, `genes_crispr.py`, `proteins_elisa.py`, `cells_inject.py`, ...) |
 | `game/*_common.py`, `game/genes_embryo.py` | Drawing helpers shared within a wing (gels, instrument screens, chromatograms, microscope fields, the zebrafish embryo) |
-| `game/audio.py` | Procedural music (one tune per technique) and sound effects |
+| `game/audio.py` | Procedural music engine (synthesised instruments and drum kit, 32-bar arrangements, side-chain, reverb) and sound effects |
+| `game/techniques.py` | Gathers the 20 techniques and sets each one's track (genre, tempo, key, sound) |
 | `game/gfx.py`, `game/render.py` | Drawing: anti-aliased shapes, shading, soft shadows, glows, procedural textures, lab objects, backgrounds |
 | `game/core.py` | Palette, input, text, saving |
 | `logo/` | Logo masters (`emblem.svg`, `logo.svg`) and renders; `python make_icon.py` makes the game icons and title logo from them |
