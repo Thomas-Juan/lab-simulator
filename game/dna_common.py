@@ -6,6 +6,7 @@ Static parts are rendered once and cached."""
 import math
 import random
 import pygame
+import core
 import gfx
 import render as R
 import real
@@ -34,6 +35,12 @@ def cached(key, make):
             _cache.clear()
         v = _cache[key] = make()
     return v
+
+
+def float_x(x, txt, size, margin=14):
+    """x for a rising floater text (centred on x) so the whole text stays on screen."""
+    hw = core.text_w(txt, size, bold=True) / 2.0 + 4
+    return clamp(x, margin + hw, W - margin - hw)
 
 
 def fmt_bp(n):
@@ -762,7 +769,7 @@ def marker_font(size):
             path = pygame.font.match_font(["inkfree", "segoeprint", "bradleyhand", "noteworthy", "comicsansms"], bold=True)
         except Exception:
             path = None
-        f = pygame.font.Font(path, size) if path else pygame.font.Font(None, int(size * 1.3))
+        f = pygame.font.Font(path, size) if path else core.font(size, True)
         _cache[key] = f
     return f
 

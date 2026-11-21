@@ -9,7 +9,7 @@ import render as R
 from stage import Stage, register, TOP, BOTTOM
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, CORAL, CORAL_D, TURQ, TEAL, LAV, VIOLET, SKY, NIGHT,
                   WHITE, GREEN, RED, YELLOW, BASE_COL, draw_text, draw_wrapped, mix, clamp)
-from genes_common import desktop, rand_seq, cell_row, ring, window, screen_window, aa_polyline, plot_box, base_tile
+from genes_common import float_x, desktop, rand_seq, cell_row, ring, window, screen_window, aa_polyline, plot_box, base_tile
 from genes_sanger import typed
 
 SBS = {"A": (70, 225, 100), "C": (90, 150, 255), "G": (250, 222, 70), "T": (245, 80, 80)}
@@ -106,7 +106,7 @@ class SBS_Stage(Stage):
                 fb = ["%d of %d bases called right; best run %d in a row." % (self.correct, self.total, self.best),
                       "Each cycle reads one base in millions of clusters at once: that is what makes it 'massively parallel'."]
                 if self.two:
-                    fb.append("Two-colour instruments read G as no light, so a run of Gs or a dead cluster both look dark.")
+                    fb.append("Two-colour instruments read G as no light, so a run of Gs and a dead cluster both look dark.")
                 self.finish(100.0 * self.correct / self.total, *fb)
 
     def partial(self):
@@ -306,8 +306,9 @@ class Align(Stage):
         self.zyg = None
         self.rowh = 56 if n <= 4 else 35
         self.y_rows = TOP + 140 if n <= 4 else TOP + 132
-        self.zbtns = [gfx.Button((W // 2 - 230, TOP + 330, 210, 40), "Homozygous", (206, 226, 240), size=16),
-                      gfx.Button((W // 2 + 20, TOP + 330, 210, 40), "Heterozygous", (240, 222, 206), size=16)]
+        # in the line under the reads, so the question never hides the reads it is about
+        self.zbtns = [gfx.Button((W - 382, TOP + 375, 150, 34), "Homozygous", (206, 226, 240), size=15),
+                      gfx.Button((W - 222, TOP + 375, 150, 34), "Heterozygous", (240, 222, 206), size=15)]
 
     def unique(self, ref, rd, o):
         for c in range(0, self.RL - self.L + 1):
@@ -371,7 +372,7 @@ class Align(Stage):
                     self.found = True
                     audio.sfx("good")
                     self.particles.burst(mx, my, 26)
-                    self.floaters.add(mx, my - 14, "real variant", GREEN, 18)
+                    self.floaters.add(float_x(mx, "real variant", 18), my - 14, "real variant", GREEN, 18)
                     if self.level == 2:
                         self.phase = "zyg"
                     else:
@@ -381,7 +382,7 @@ class Align(Stage):
                     audio.sfx("bad")
                     self.shake = 8
                     msg = "only one read: a sequencing error" if col in self.err_cols else "no variant here"
-                    self.floaters.add(mx, my - 14, msg, RED, 16)
+                    self.floaters.add(float_x(mx, msg, 16), my - 14, msg, RED, 16)
                     if self.wrong >= 3:
                         self.end()
         elif self.phase == "zyg":
@@ -450,13 +451,14 @@ class Align(Stage):
             gfx.rrect(s, r.inflate(8, 6), (236, 250, 236) if self.locked[i] else (250, 250, 252), edge, 3 if (sel or self.locked[i]) else 2, 8, 0.06)
             cell_row(s, r.x, y + (4 if self.n <= 4 else 2), self.reads[i], cw, 15 if cw < 22 else 16, fl, h=26 if self.n <= 4 else 24)
             if self.locked[i]:
-                aa_polyline(s, GREEN, [(x0 - 84, y + 15), (x0 - 79, y + 21), (x0 - 70, y + 8)], 3)
+                # tick beside the placed read (the label column has no room left of it)
+                tx = r.right + 10 if r.right + 26 <= inner.right else r.x - 26
+                aa_polyline(s, GREEN, [(tx, y + 15), (tx + 5, y + 21), (tx + 14, y + 8)], 3)
         by = TOP + 388 if self.n > 4 else TOP + 380
         if self.phase == "snp":
             draw_text(s, "Now click the reference base where the reads show a real variant.", (W // 2, by), 17, CORAL_D, center=True, bold=True)
         elif self.phase == "zyg":
-            gfx.alpha_rect(s, (W // 2 - 260, TOP + 280, 520, 104), WHITE, 235, 10)
-            draw_text(s, "Is this fish homozygous or heterozygous for the variant?", (W // 2, TOP + 298), 16, INK, center=True, bold=True)
+            draw_text(s, "Is this fish homozygous or heterozygous for the variant?", (60, TOP + 382), 16, INK, bold=True)
             for b in self.zbtns:
                 b.draw(s)
         else:

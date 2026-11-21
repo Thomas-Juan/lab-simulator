@@ -87,7 +87,8 @@ def scene_denature(st, s, v):
         lab = "Linear chain coated with SDS (-)"
     else:
         lab = "Drying out, some proteins clumping"
-    draw_text(s, lab, (c[0], rect.bottom - 50), 17, RED if v >= 0.78 else INK, center=True, bold=True)
+    # two short lines, so the label stays inside the round magnifier
+    draw_wrapped(s, lab, (c[0] - 105, rect.bottom - 80), 16, 210, RED if v >= 0.78 else INK, bold=True, center=True)
     gfx.tag(s, 210, 474, "Samples in Laemmli buffer: SDS, reducing agent, glycerol, dye", (250, 246, 236), 12, center=True)
     if st.state != "run":
         lo, hi = st.window
@@ -495,7 +496,7 @@ TECH = dict(
                motif=[(0, 1), (0, 1), (4, 2), (4, 1), (5, 1), (4, 2), (2, 2), (1, 2), (0, 4)]),
     stages=[
         ("stop", dict(title="Denature the samples", scene=scene_denature, dur=9.0, ideal=0.5, window=(0.3, 0.76),
-                      readout=lambda v: "%s at 95 deg C" % mmss(v * 600),
+                      readout=lambda v: "%s, 95 deg C" % mmss(v * 600),
                       instr="Samples sit at 95 deg C in Laemmli buffer. Stop at about 5 minutes: long enough to unfold the "
                             "proteins, not so long that the tubes dry out and fragile proteins clump.",
                       early_msg="Too short: some proteins are still folded and will run at the wrong size.",

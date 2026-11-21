@@ -48,7 +48,7 @@ class FacsSort(Stage):
         self.wrong = 0
         self.tubes = {"L": [], "W": [], "R": []}
         self.flash = {"g": 0, "r": 0}
-        self.hint = "LEFT = green only    RIGHT = red only    nothing = both or neither"
+        self.hint = "LEFT: green only. RIGHT: red only. Nothing: both or neither."
 
     def speed(self):
         return self.base_v + 1.7 * self.spawned / self.total
@@ -75,7 +75,7 @@ class FacsSort(Stage):
                 d = min(cand, key=lambda d: -d["y"])
                 d["dec"] = dec
                 audio.sfx("click")
-            else:
+            elif not any(q[2] == "no cell to sort" and q[4] > 30 for q in self.floaters.f):   # do not stack copies
                 self.floaters.add(480 + (-120 if dec == "L" else 120), PLATE_Y - 30, "no cell to sort", MUTED, 15)
         sp = self.speed()
         for d in self.drops:
@@ -121,8 +121,8 @@ class FacsSort(Stage):
             self.mistakes[d["t"]] = self.mistakes.get(d["t"], 0) + 1
             self.shake = 6
             audio.sfx("bad")
-            name = {"g": "a GFP cell", "r": "an mCherry cell", "y": "a double-positive cell", "n": "an unlabelled cell",
-                    "2": "two cells in one drop"}[d["t"]]
+            name = {"g": "GFP cell", "r": "mCherry cell", "y": "double positive", "n": "unlabelled cell",
+                    "2": "two cells"}[d["t"]]
             self.floaters.add(x, TUBE_Y - 40, name + " here!", RED, 16)
 
     def partial(self):
@@ -168,7 +168,7 @@ class FacsSort(Stage):
             if f:
                 R.glow(s, (NOZ[0], LASER_Y), int(30 + 30 * f), tuple(int(c * f) for c in col))
         # detector read-outs
-        for k, col, yy, lab in (("g", FG, LASER_Y - 76, "GFP  530/30"), ("r", FR, LASER_Y + 24, "mCherry  610/20")):
+        for k, col, yy, lab in (("g", FG, LASER_Y - 76, "GFP 530/30"), ("r", FR, LASER_Y + 24, "mCherry 610/20")):
             box = pygame.Rect(600, yy, 146, 50)
             draw_text(s, lab, (box.x + 10, box.y + 6), 12, (210, 216, 230), bold=True)
             gfx.bar(s, (box.x + 10, box.y + 28, box.w - 20, 12), self.flash[k] / 30.0, col, (20, 22, 30), (90, 96, 110))
@@ -270,7 +270,9 @@ def _sorter_bg():
         pygame.draw.line(b, col, (x - 3, PLATE_Y + 6), (x - 3, PLATE_Y + 94), 2)
         R.glow(b, (x, PLATE_Y + 50), 34, tuple(int(c * 0.22) for c in col))
         draw_text(b, lab, (x, PLATE_Y + 104), 20, col, center=True, bold=True)
-    draw_text(b, "charged plates", (NOZ[0], PLATE_Y + 104), 12, (190, 200, 216), center=True, bold=True)
+    # beside the minus plate, out of the droplet stream and the score texts over the waste tube
+    draw_text(b, "charged", (394, PLATE_Y + 36), 12, (190, 200, 216), right=True, bold=True)
+    draw_text(b, "plates", (394, PLATE_Y + 52), 12, (190, 200, 216), right=True, bold=True)
     # tube holder on the instrument's shelf
     gfx.metal_rect(b, (232, TUBE_Y + 28, 496, 16), (150, 156, 168), 4)
     gl = pygame.Rect(win.x + 4, win.y + 4, win.w - 8, 26)
@@ -412,7 +414,7 @@ class FacsGate(Stage):
 
     def render(self, s):
         gfx.bench(s, SKY)
-        _monitor(s, PLOT.inflate(80, 70).move(-12, 4), "%s.fcs  -  FSC-A / SSC-A" % self.sample[0].split()[0])
+        _monitor(s, PLOT.inflate(80, 70).move(-12, 4), "%s.fcs - FSC-A / SSC-A" % self.sample[0].split()[0])
         _axes(s, PLOT, "FSC-A", "SSC-A", lin=True)
         s.blit(self.plot_layer(), PLOT.topleft)
         if self.gate:
@@ -422,7 +424,8 @@ class FacsGate(Stage):
             gr = pygame.Rect(int(ax), int(ay), max(1, int(bx - ax)), max(1, int(by - ay)))
             pygame.draw.rect(s, (20, 20, 24), gr, 1)
             n_in = self.stats()[0]
-            draw_text(s, "Cells  %.1f" % (100.0 * n_in / len(self.ev)), (gr.x + 2, gr.y - 16), 12, (20, 20, 24), bold=True)
+            ly = gr.y - 16 if gr.y - 16 >= PLOT.y else gr.y + 3       # inside the gate when it touches the top
+            draw_text(s, "Cells %.1f" % (100.0 * n_in / len(self.ev)), (gr.x + 3, ly), 12, (20, 20, 24), bold=True)
         p = pygame.Rect(530, TOP + 30, 400, 440)
         gfx.card(s, p, CARD)
         draw_text(s, "Reading a scatter plot", (p.x + 16, p.y + 14), 17, INK, bold=True)

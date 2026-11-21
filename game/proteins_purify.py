@@ -149,7 +149,7 @@ class PurifyCollect(Stage):
     # ------------------------------------------------------------ drawing
     def P(self, x, y):
         ax = self.ax
-        return (ax.x + ax.w * x, ax.bottom - ax.h * y)
+        return (ax.x + ax.w * x, ax.bottom - ax.h * 0.86 * y)     # headroom for the phase labels at the top
 
     def _static(self):
         def make():
@@ -208,8 +208,9 @@ class PurifyCollect(Stage):
             sf.blit(real.shaded_mask(mw, (232, 234, 228), real.cyl_profile(wb.w, 0.27, 0.07, 0.4, 0.62), 200), wb.topleft)
             gfx.alpha_rect(sf, (wb.x + 4, wb.y + 28, wb.w - 8, wb.h - 32), (196, 214, 226), 150, 8)
             gfx.plastic_rect(sf, (wb.centerx - 14, wb.y - 12, 28, 14), (60, 64, 74), 3, 0.3)
-            pygame.draw.rect(sf, (252, 252, 248), (wb.x + 14, wb.y + 10, wb.w - 28, 16))
-            draw_text(sf, "WASTE", (wb.centerx, wb.y + 12), 10, (190, 60, 50), center=True, bold=True)
+            # label low on the bottle, below where the tubing to the fraction collector crosses it
+            pygame.draw.rect(sf, (252, 252, 248), (wb.x + 14, wb.y + 34, wb.w - 28, 16))
+            draw_text(sf, "WASTE", (wb.centerx, wb.y + 36), 10, (190, 60, 50), center=True, bold=True)
             # fraction collector: white housing with a tube rack
             rack = pygame.Rect(262, 376, 664, 120)
             sh = real.contact_shadow(rack.w + 20, 18, 110)
@@ -278,7 +279,7 @@ class PurifyCollect(Stage):
         gfx.metal_rect(s, (262, 370, 664, 10), (190, 194, 200), 4)
         gfx.plastic_rect(s, (ax_x - 12, 362, 24, 28), (60, 64, 76), 5, 0.3)
         gfx.led(s, (ax_x, 372), GREEN if self.on else (200, 70, 60), True, 4)
-        lab = "COLLECTING" if self.on else "to waste  (hold to collect)"
+        lab = "COLLECTING" if self.on else "to waste (hold to collect)"
         gfx.tag(s, 594, 336, lab, (196, 236, 200) if self.on else (236, 232, 222), 14, center=True)
         if self.xe is None and not self.done:
             if self.elute_btn.enabled and self.level == 0 and self.x > 0.5:
@@ -291,7 +292,7 @@ class PurifyCollect(Stage):
     def draw_check(self, s):
         """After the run: a Coomassie gel of the collected fractions, the check everyone does next."""
         kept = [(i, t_, o_) for i, (t_, o_) in enumerate(self.tubes) if t_ + o_ > 1e-5]
-        card = pygame.Rect(70, TOP + 16, 360, 220)
+        card = pygame.Rect(52, TOP + 16, 360, 220)       # covers the axis labels it overlaps, not half of them
         gfx.card(s, card, CARD, INK, 12)
         draw_text(s, "Fractions on SDS-PAGE (Coomassie)", (card.x + 14, card.y + 10), 14, INK, bold=True)
         gel = pygame.Rect(card.x + 62, card.y + 36, card.w - 80, card.h - 50)
@@ -355,12 +356,12 @@ TECH = dict(
                motif=[(4, 1), (4, 1), (5, 1), (4, 1), (2, 2), (0, 1), (2, 1), (4, 3), (7, 5)]),
     stages=[
         ("order", dict(title="Purification protocol", heading="Ni-NTA protocol", tint=(210, 232, 214), limit=45,
-                       steps=[("Equilibrate the column in binding buffer", SKY, "The resin must sit in the same buffer as the sample."),
+                       steps=[("Equilibrate in binding buffer", SKY, "The resin must sit in the same buffer as the sample."),
                               ("Load the cleared lysate", SAND, "His-tagged protein binds the nickel; most host proteins flow through."),
                               ("Wash with 20 mM imidazole", (230, 236, 240), "Low imidazole removes weakly bound host proteins."),
                               ("Elute with 250 mM imidazole", LAV, "High imidazole competes the His-tag off the nickel."),
-                              ("Check the fractions on SDS-PAGE", (196, 214, 236), "A gel shows which fractions hold pure protein."),
-                              ("Pool pure fractions, dialyse out imidazole", PEACH, "Imidazole would interfere with later experiments, so it is removed.")])),
+                              ("Check fractions on SDS-PAGE", (196, 214, 236), "A gel shows which fractions hold pure protein."),
+                              ("Pool, dialyse out imidazole", PEACH, "Imidazole would interfere with later experiments, so it is removed.")])),
         ("purify_collect", dict(dur=32.0)),
         ("quiz", dict(title="Seminar on the column", n=3, tint=(210, 232, 214),
                       questions=[

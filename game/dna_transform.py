@@ -119,7 +119,7 @@ class SpreadStage(Stage):
         was = self.done
         Stage.update(self, inp)
         if self.done and not was and self.feedback == ["Time ran out."]:
-            self.feedback = ["You covered %d %% of the plate. Bare patches give no colonies, the puddle gives a lawn." % int(self.coverage() * 100)]
+            self.feedback = ["You covered %d %% of the plate. Bare patches give no colonies; the puddle gives a lawn." % int(self.coverage() * 100)]
             if self.tears:
                 self.feedback.append("%d tear%s in the agar: sweep smoothly instead of jabbing." % (len(self.tears), "" if len(self.tears) == 1 else "s"))
 
@@ -321,7 +321,7 @@ TECH = dict(
              answer=0, why="The insert sits inside the lacZ fragment. No working beta-galactosidase means no blue product."),
         dict(q="What does the ampicillin in the plate do?", options=["Kills cells that did not take up the plasmid", "Turns colonies blue", "Makes cells competent", "Feeds the bacteria"],
              answer=0, why="The plasmid carries an ampicillin resistance gene, so only transformed cells survive."),
-        dict(q="Why put the cells back on ice right after the heat shock?", options=["The sudden temperature changes help DNA enter and the cold lets membranes recover", "To kill the bacteria", "To freeze the plasmid", "To stop the antibiotic"],
+        dict(q="Why put the cells back on ice right after the heat shock?", options=["The sudden temperature changes help DNA enter, and the cold lets membranes recover", "To kill the bacteria", "To freeze the plasmid", "To stop the antibiotic"],
              answer=0, why="The heat shock depends on a sharp temperature jump; the cells then recover on ice before the outgrowth at 37 deg C."),
     ],
     music=dict(name="Heat Shock Polka", bpm=144, beats=4, root=57, mode="maj", prog=[0, 4, 4, 0, 0, 4, 4, 0], lead="whistle", comp="arp",

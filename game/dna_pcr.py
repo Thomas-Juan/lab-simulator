@@ -222,7 +222,7 @@ MIXCOL = (236, 186, 120)
 @register("pcr_mix")
 class MixStage(Stage):
     title = "Make the master mix"
-    instr = ("Type the total volume of each reagent for the whole master mix, then hand it out: 24 uL into every PCR tube. "
+    instr = ("Type the total volume of each reagent for the whole master mix, then dispense it: 24 uL into every PCR tube. "
              "Pipettes are never perfect, so plan for it.")
     limit = 120
 
@@ -340,7 +340,7 @@ class MixStage(Stage):
             else:
                 fb.append("The mix ran out at tube%s %s. Always make 1 extra reaction (or 10 %% more): pipetting loses a little every time." % ("" if len(short) == 1 else "s", names))
             if "NTC" in [self.names[i] for i in short]:
-                fb.append("The NTC went short: a control that is not set up like the samples cannot tell you anything.")
+                fb.append("The NTC was short of mix: a control that is not set up like the samples cannot tell you anything.")
         elif self.k > self.n * 1.5:
             sc -= 10
             fb.append("Enough mix, but far more than %d tubes need: that wastes Taq." % self.n)
@@ -400,7 +400,7 @@ class MixStage(Stage):
                 draw_text(s, ctl[c], (780, yy), 15, CORAL_D, center=True, bold=True)
                 yy += 22
             draw_wrapped(s, "Each tube gets 24 uL of mix; the 1 uL of template goes in afterwards.", (640, yy + 8), 14, 280, INK_SOFT)
-            draw_wrapped(s, "Click a box and type. Tab or Enter for the next one.", (640, TOP + 246), 13, 280, MUTED)
+            draw_wrapped(s, "Click a box and type. Tab or Enter for the next one.", (640, TOP + 238), 13, 280, MUTED)
             for k in range(len(RECIPE)):
                 gfx.tube(s, 664 + k * 34, TOP + 306, 18, 46, (236, 236, 240), 0.5, CAPS[k % len(CAPS)])
             ice_bucket(s, pygame.Rect(650, TOP + 338, 270, 40))
@@ -661,15 +661,15 @@ class CyclerStage(Stage):
 
         def ty(temp):
             return graph.bottom - 12 - (temp - 10) / 95.0 * (graph.h - 24)
-        for tt in (95, 72, 55):
-            pygame.draw.line(s, (54, 62, 82), (graph.x + 4, ty(tt)), (graph.right - 4, ty(tt)), 1)
-            draw_text(s, "%d" % tt, (graph.x + 6, ty(tt) - 15), 11, (150, 160, 190))
-        x = graph.x + 4
+        for tt in (95, 72, 55):       # temperature labels in a margin of their own, left of the trace
+            pygame.draw.line(s, (54, 62, 82), (graph.x + 26, ty(tt)), (graph.right - 4, ty(tt)), 1)
+            draw_text(s, "%d" % tt, (graph.x + 21, ty(tt)), 11, (150, 160, 190), right=True, vcenter=True)
+        x = graph.x + 28
         pts = []
         upto = self.prog * tot if self.running else tot
         acc = 0
         for temp, dur in segs:
-            w = dur / tot * (graph.w - 8)
+            w = dur / tot * (graph.w - 32)
             if acc <= upto:
                 pts += [(x, ty(temp)), (x + w * clamp((upto - acc) / dur, 0, 1), ty(temp))]
             acc += dur
@@ -784,7 +784,9 @@ class LoadStage(Stage):
                     self.blobs.append((self.tip[0], self.tip[1], self.rng.uniform(4, 8), self.t))
                     audio.sfx("splash")
                     self.shake = 6
-                    self.floaters.add(self.tip[0], self.tip[1] - 20, "spilled!", RED, 16)
+                    if self.t - getattr(self, "_spill_t", -99) >= 40:    # one label at a time, or they pile up
+                        self._spill_t = self.t
+                        self.floaters.add(self.tip[0], self.tip[1] - 20, "spilled!", RED, 16)
         elif not inp.down:
             self.hold = 0
 
@@ -939,7 +941,7 @@ TECH = dict(
     facts=[
         "Kary Mullis came up with PCR in 1983 while driving at night in California. He shared the 1993 Nobel Prize in Chemistry for it.",
         "Taq polymerase comes from Thermus aquaticus, a bacterium first isolated from a hot spring in Yellowstone National Park.",
-        "Early PCR used a polymerase that heat destroyed, so fresh enzyme had to be added by hand after every cycle.",
+        "Early PCR used a polymerase that the heat destroyed, so fresh enzyme had to be added by hand after every cycle.",
         "Each cycle can double the target, so 30 cycles can in theory turn one molecule into about a billion copies (2^30).",
         "Taq does not proofread. When the exact sequence matters, labs use proofreading enzymes such as Pfu or Q5.",
         "Taq adds a single extra A to the 3' ends of its products. TA cloning uses this overhang to ligate PCR products into vectors.",

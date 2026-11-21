@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The board: a loop of 28 benches around the lab. Roll the die, move, play what you land on.
+"""The board: a loop of 28 benches around the lab. Roll the dice, move, play what you land on.
 
 20 spaces are techniques; the others are Start (grant renewed: +1 coffee each lap), Lab notebook
 (a fun fact), Seminar (a question; right answer = +1 coffee), Coffee (+1), Contamination (back 3)
@@ -25,7 +25,7 @@ N = len(LAYOUT)
 SPECIAL = {
     "START": ("Start", "Grant renewed: +1 coffee every time you pass.", YELLOW),
     "NOTEBOOK": ("Lab notebook", "Read a page from someone's lab notebook.", (252, 244, 224)),
-    "SEMINAR": ("Seminar", "Answer a question from the audience. Right: +1 coffee.", (205, 226, 240)),
+    "SEMINAR": ("Seminar", "Answer a question from the audience. Correct: +1 coffee.", (205, 226, 240)),
     "COFFEE": ("Coffee", "The break-room coffee machine works today: +1 coffee.", (226, 200, 170)),
     "CONTAMINATION": ("Contamination!", "Mould in the incubator. Go back 3 spaces.", (226, 236, 190)),
     "CONFERENCE": ("Conference", "Pick any technique to try.", (232, 214, 240)),
@@ -36,6 +36,41 @@ RANKS = [(0, "Summer student"), (8, "Master's student"), (18, "PhD student"), (3
 TW, TH = 96, 74            # top and bottom row tiles
 SW, SH = 96, 64            # side tiles
 X0, Y0 = 50, 50
+
+
+HYPHEN = {"Immunofluorescence": ("Immuno-", "fluorescence"), "Microinjection": ("Micro-", "injection"),
+          "Transformation": ("Transfor-", "mation"), "Transfection": ("Transfec-", "tion")}
+
+
+# shorter labels for the board tiles (the full name shows in the centre panel on hover)
+TILE_NAME = {"extract": "Extraction", "if": "Microscopy", "purify": "Purification", "inject": "Injection",
+             "count": "Cell count"}
+
+
+def fit_label(name, width, big=13, small=11):
+    """Choose a size and one or two lines so a label fits `width` without shrinking below `small`:
+    one line from big down to small, else two lines (split at a space, or a hyphen in a long word)."""
+    for sz in range(big, small - 1, -1):
+        if text_w(name, sz, True) <= width:
+            return sz, [name]
+    words = name.split(" ")
+    if len(words) > 1:
+        best = None
+        for k in range(1, len(words)):
+            a, b = " ".join(words[:k]), " ".join(words[k:])
+            w = max(text_w(a, small, True), text_w(b, small, True))
+            if best is None or w < best[0]:
+                best = (w, [a, b])
+        for sz in range(12, small - 1, -1):
+            if max(text_w(x, sz, True) for x in best[1]) <= width:
+                return sz, best[1]
+        return small, best[1]
+    if name in HYPHEN:
+        return small, list(HYPHEN[name])
+    sz = small
+    while sz > 9 and text_w(name, sz, True) > width:
+        sz -= 1
+    return sz, [name]
 
 
 def rank(stars):
@@ -86,7 +121,7 @@ class Board:
         self.floaters = gfx.Floaters()
         self.hover = None
         self.pos_draw = None
-        self.roll_btn = gfx.Button((W // 2 - 80, 360, 160, 46), "Roll the die", SAND, size=18)
+        self.roll_btn = gfx.Button((W // 2 - 80, 360, 160, 46), "Roll the dice", SAND, size=18)
         self.go_btn = gfx.Button((W // 2 - 60, 384, 120, 40), "Move", SAND)
         self.minus_btn = gfx.Button((W // 2 - 196, 384, 120, 40), "-1  coffee", (226, 200, 170), size=15)
         self.plus_btn = gfx.Button((W // 2 + 76, 384, 120, 40), "+1  coffee", (226, 200, 170), size=15)
@@ -237,7 +272,7 @@ class Board:
             self.popup = {"kind": "seminar", "q": q, "opts": opts, "tech": tech, "chosen": None}
         elif what == "COFFEE":
             self.slot["coffee"] += 1
-            self.popup = {"kind": "msg", "title": "Coffee", "text": "The break-room coffee machine works today. +1 coffee.\nSpend coffee after a roll to move one space more or less."}
+            self.popup = {"kind": "msg", "title": "Coffee", "text": "The break-room coffee machine works today: +1 coffee.\nSpend coffee after a roll to move one space more or less."}
             audio.sfx("coffee")
         elif what == "CONTAMINATION":
             self.popup = {"kind": "msg", "title": "Contamination!", "text": "Mould is growing in the shared incubator. Everyone goes back three benches while it is cleaned.", "back": 3}
@@ -247,7 +282,7 @@ class Board:
             audio.sfx("ding")
         elif what == "START":
             self.slot["coffee"] += 1
-            self.popup = {"kind": "msg", "title": "Landed on Start", "text": "Your grant report was praised. One more coffee."}
+            self.popup = {"kind": "msg", "title": "Landed on Start", "text": "Your grant report was praised. +1 coffee."}
 
     def random_fact(self):
         pool = []
@@ -339,13 +374,14 @@ class Board:
             for k in range(0, tape.w, 6):
                 pygame.draw.line(s, mix(col, WHITE, 0.25), (tape.x + k, tape.y + 2), (tape.x + k + 3, tape.y + 2), 1)
             big = r.h > 66
-            ic = (r.centerx - (0 if big else 6), r.y + (31 if big else 30))
-            gfx.icon(s, t["icon"], ic, 24 if big else 22)
-            name = t["name"]
-            sz = 13
-            while sz > 9 and text_w(name, sz, True) > r.w - (8 if big else 22):
-                sz -= 1
-            draw_text(s, name, (r.centerx - (0 if big else 6), r.y + (43 if big else 40)), sz, INK, center=True, bold=True)
+            sz, lines = fit_label(TILE_NAME.get(t["key"], t["name"]), r.w - (8 if big else 22))
+            two = len(lines) > 1
+            cx = r.centerx - (0 if big else 6)
+            ic = (cx, r.y + (26 if big else 24) if two else r.y + (31 if big else 30))
+            gfx.icon(s, t["icon"], ic, (22 if big else 20) if two else (24 if big else 22))
+            y0 = r.y + (36 if big else 34) if two else r.y + (43 if big else 40)
+            for k, ln in enumerate(lines):
+                draw_text(s, ln, (cx, y0 + k * (sz + 1)), sz, INK, center=True, bold=True)
             n = rec["stars"] if rec else 0
             if rec and rec.get("expert"):
                 gfx.rrect(s, r.inflate(4, 4), None, (214, 160, 40), 3, 6)
@@ -454,7 +490,7 @@ class Board:
             here = BY_KEY[what]["full"] if what in BY_KEY else SPECIAL[what][0]
             draw_text(s, "You are at: " + here, (mid.centerx, mid.y + 10), 15, INK_SOFT, center=True, bold=True)
             if self.state in ("idle", "rolling"):
-                draw_text(s, "Roll the die to move around the lab. Hover over a bench to read about it.", (mid.centerx, mid.y + 34), 13, MUTED, center=True)
+                draw_text(s, "Roll the dice to move around the lab. Hover over a bench to read about it.", (mid.centerx, mid.y + 34), 13, MUTED, center=True)
         # die and controls
         rot = (math.sin(self.roll_t * 0.7) * 25) if self.state == "rolling" else 0
         dy = -abs(math.sin(self.roll_t / 5.0)) * 16 if self.state == "rolling" else 0

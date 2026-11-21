@@ -6,8 +6,8 @@ import audio
 import gfx
 from stage import Stage, register, TOP, BOTTOM
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, CORAL, CORAL_D, TURQ, TEAL, VIOLET, LAV, SKY, WHITE, GREEN, RED,
-                  YELLOW, BASE_COL, draw_text, draw_wrapped, mix, clamp)
-from genes_common import rand_seq, revcomp, trace_surface, trace_pic, window, screen_window, aa_polyline, base_tile, COMP
+                  YELLOW, BASE_COL, draw_text, draw_wrapped, mix, clamp, text_w)
+from genes_common import float_x, rand_seq, revcomp, trace_surface, trace_pic, window, screen_window, aa_polyline, base_tile, COMP
 
 KEYS = {pygame.K_a: "A", pygame.K_c: "C", pygame.K_g: "G", pygame.K_t: "T", pygame.K_n: "N"}
 
@@ -129,9 +129,9 @@ class SangerRead(Stage):
                 else:
                     audio.sfx("bad")
                     self.shake = 8
-                    why = "a double peak (N): a heterozygous site, one allele matches the reference" if i in self.second else \
+                    why = "double peak (N): one allele matches the reference" if i in self.second else \
                           "your call was wrong here" if self.calls[i] != self.truth[i] else "no difference here"
-                    self.floaters.add(r.centerx, r.y - 40, why, RED, 15)
+                    self.floaters.add(float_x(r.centerx, why, 15), r.y - 40, why, RED, 15)
                     if len(self.picks) >= 3:
                         self.end()
                 return
@@ -346,31 +346,38 @@ class RevComp(Stage):
         inner = screen_window(s, (60, TOP + 10, W - 120, 372), "Primer design  ·  %s  ·  %d of %d" % (self.contexts[self.r % 3], self.r + 1, len(self.lens)), VIOLET)
         n = len(self.answer)
         if self.r == 1:
-            ctx = "5'-...%s[%s]-3'   the end of the amplicon (top strand)" % (self.flank.lower(), self.primer)
-            draw_text(s, ctx, (inner.x + 6, inner.y - 2), 13, MUTED, mono=True)
+            # the sequence in mono, its caption in the text face, centred together
+            seq = "5'-...%s[%s]-3'" % (self.flank.lower(), self.primer)
+            note = "the end of the amplicon (top strand)"
+            w1, w2 = text_w(seq, 13, mono=True), text_w(note, 13)
+            cx = inner.centerx - (w1 + 16 + w2) // 2
+            draw_text(s, seq, (cx, inner.y + 214), 13, MUTED, mono=True)
+            draw_text(s, note, (cx + w1 + 16, inner.y + 214), 13, MUTED)
         draw_text(s, "Your sequence (top strand)", (W // 2, inner.y + 4), 16, INK_SOFT, center=True, bold=True)
         i_typ = len(self.entry)
         hl = n - 1 - i_typ if (i_typ < n and not self.wait) else None
         x0, cw = self.boxes(inner.y + 30, self.primer, n, hl)
-        gfx.tag(s, W // 2, inner.y + 92, "read it backwards and swap each base", (238, 230, 248), 13, center=True)
-        draw_text(s, "Reverse complement", (W // 2, inner.y + 134), 16, INK_SOFT, center=True, bold=True)
         live = self.answer if (self.wait or self.level == 0) else None
         x1, _ = self.boxes(inner.y + 160, self.entry, n, i_typ if not self.wait else None, live)
         if hl is not None:
             a = (x0 + hl * cw + cw // 2 - 3, inner.y + 76)
             b = (x1 + i_typ * cw + cw // 2 - 3, inner.y + 154)
-            mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 10)
             pts = [(a[0] + (b[0] - a[0]) * t + 0, a[1] + (b[1] - a[1]) * t - math.sin(t * math.pi) * 14) for t in [k / 16 for k in range(17)]]
             aa_polyline(s, CORAL, pts, 2)
             gfx.circle(s, CORAL, b, 5, 0, shade=False)
-            del mid
+        # the labels go over the pointer line, on the window's own white, so the line never crosses the words
+        head = "Reverse complement"
+        hw = text_w(head, 16, bold=True)
+        pygame.draw.rect(s, (250, 250, 251), (W // 2 - hw // 2 - 6, inner.y + 134, hw + 12, 22))
+        draw_text(s, head, (W // 2, inner.y + 134), 16, INK_SOFT, center=True, bold=True)
+        gfx.tag(s, W // 2, inner.y + 92, "read it backwards and swap each base", (238, 230, 248), 13, center=True)
         if self.wait > 0:
-            draw_text(s, "Answer: 5'-" + self.answer + "-3'", (W // 2, inner.y + 222), 18, INK, center=True, bold=True, mono=True)
+            draw_text(s, "Answer: 5'-" + self.answer + "-3'", (W // 2, inner.y + (246 if self.r == 1 else 222)), 18, INK, center=True, bold=True, mono=True)
         for k, (p1, p2) in enumerate((("A", "T"), ("C", "G"))):
-            x = W // 2 - 150 + k * 170
+            x = W // 2 - 160 + k * 180
             base_tile(s, (x, inner.bottom - 40, 30, 30), p1, 17)
-            draw_text(s, "pairs with", (x + 62, inner.bottom - 25), 13, INK_SOFT, center=True, vcenter=True)
-            base_tile(s, (x + 96, inner.bottom - 40, 30, 30), p2, 17)
+            draw_text(s, "pairs with", (x + 70, inner.bottom - 25), 13, INK_SOFT, center=True, vcenter=True)
+            base_tile(s, (x + 110, inner.bottom - 40, 30, 30), p2, 17)
         for b in self.btns:
             b.draw(s)
             draw_text(s, b.label, b.rect.center, 24, BASE_COL[b.label], center=True, bold=True, vcenter=True)

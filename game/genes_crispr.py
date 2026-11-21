@@ -8,8 +8,8 @@ import gfx
 import render as R
 from stage import Stage, register, TOP, BOTTOM
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, CORAL, CORAL_D, TURQ, TEAL, LAV, VIOLET, SKY, WHITE,
-                  GREEN, RED, YELLOW, BASE_COL, GEL, draw_text, draw_wrapped, mix, clamp)
-from genes_common import desktop, rand_seq, comp, cell_row, trace_pic, window, screen_window, aa_polyline, base_tile, dark_gel, uv_band, ring
+                  GREEN, RED, YELLOW, BASE_COL, GEL, draw_text, draw_wrapped, mix, clamp, text_w)
+from genes_common import float_x, desktop, rand_seq, comp, cell_row, trace_pic, window, screen_window, aa_polyline, base_tile, dark_gel, uv_band, ring
 
 PAM_FILL = (250, 222, 120)
 CCN_FILL = (250, 196, 170)
@@ -43,7 +43,7 @@ def gen_exon(rng, n=64, line=32):
 class FindPAM(Stage):
     title = "Find the PAMs"
     instr = ("Cas9 can only cut next to a PAM: the sequence NGG (any base, then two Gs). "
-             "Click every NGG on the top strand (a CCN is a bonus: an NGG on the bottom strand). "
+             "Click every NGG on the top strand (a CCN counts as a bonus: it is an NGG on the bottom strand). "
              "Then pick the PAM you will use for your guide.")
     limit = 55
 
@@ -84,13 +84,14 @@ class FindPAM(Stage):
                     self.pick = i
                     audio.sfx("win")
                     self.particles.burst(inp.mouse[0], inp.mouse[1], 24)
-                    self.floaters.add(inp.mouse[0], inp.mouse[1] - 20, "your guide", GREEN, 20)
+                    self.floaters.add(float_x(inp.mouse[0], "your guide", 20), inp.mouse[1] - 20, "your guide", GREEN, 20)
                     self.end()
                 else:
                     self.pick_wrong += 1
                     audio.sfx("bad")
                     self.shake = 10
-                    self.floaters.add(inp.mouse[0], inp.mouse[1] - 20, "only %d bases before it" % i, RED, 17)
+                    msg = "only %d bases before it" % i
+                    self.floaters.add(float_x(inp.mouse[0], msg, 17), inp.mouse[1] - 20, msg, RED, 17)
                     if self.pick_wrong >= 2:
                         self.end()
             return
@@ -105,12 +106,12 @@ class FindPAM(Stage):
         elif o and o[0] == "ccn" and o[1] not in self.bonus:
             self.bonus.add(o[1])
             audio.sfx("ding")
-            self.floaters.add(inp.mouse[0], inp.mouse[1] - 20, "bottom-strand PAM +5", TEAL, 18)
+            self.floaters.add(float_x(inp.mouse[0], "bottom-strand PAM +5", 18), inp.mouse[1] - 20, "bottom-strand PAM +5", TEAL, 18)
         elif not o:
             self.wrong += 1
             audio.sfx("bad")
             self.shake = 10
-            self.floaters.add(inp.mouse[0], inp.mouse[1] - 20, "no PAM", RED, 18)
+            self.floaters.add(float_x(inp.mouse[0], "no PAM", 18), inp.mouse[1] - 20, "no PAM", RED, 18)
 
     def score_now(self):
         find = 100.0 * len(self.found) / len(self.ngg) - self.lv(6, 8, 10) * self.wrong + 5 * len(self.bonus)
@@ -180,7 +181,8 @@ class FindPAM(Stage):
                 pygame.draw.line(s, (200, 200, 210), (x, y0 + 26), (x, y0 + 30))
         draw_text(s, "PAMs found: %d / %d" % (len(self.found), len(self.ngg)), (64, TOP + 410), 18, INK, bold=True)
         if self.phase == "pick" and self.pick is None:
-            gfx.tag(s, W - 40 - 470, TOP + 404, "All found! Now click the PAM for your guide: it needs 20 bases before it.", (252, 236, 200), 14)
+            msg = "All found! Now click the PAM for your guide: it needs 20 bases before it."
+            gfx.tag(s, W - 40 - text_w(msg, 14, bold=True) - 18, TOP + 404, msg, (252, 236, 200), 14)
             return
         draw_text(s, "bottom strand: %d" % len(self.bonus), (300, TOP + 412), 15, TEAL, bold=True)
         draw_text(s, "Turquoise = protospacer; coral = guide RNA, which pairs with the other strand", (W - 40, TOP + 412), 13, INK_SOFT, right=True)
@@ -302,7 +304,7 @@ class CutSite(Stage):
                 self.r += 1
                 if self.r >= len(self.kinds):
                     self.r -= 1
-                    self.anim = -10 ** 6
+                    self.anim = 60          # keep the last cut on screen (tick stops once finished)
                     self.finish(sum(self.scores) / len(self.scores), "%d of %d cut sites exact." % (self.scores.count(100), len(self.kinds)),
                                 "Cas9 cuts 3 bases from the PAM, inside the protospacer, and usually leaves blunt ends.")
                 else:
@@ -347,7 +349,10 @@ class CutSite(Stage):
         aa_polyline(s, CORAL, [(g0, gy), (g1, gy)], 4)
         tail = [(g1 if top else g0, gy)] + [((g1 if top else g0) + (14 + 6 * math.sin(k)) * (1 if top else -1), gy + 12 * k * (1 if top else -1)) for k in range(1, 5)]
         aa_polyline(s, CORAL, tail, 3)
-        draw_text(s, "guide RNA (pairs with the other strand)", ((g0 + g1) // 2, gy + 8 if top else gy - 24), 13, CORAL_D, center=True, bold=True)
+        glab = "guide RNA (pairs with the other strand)"
+        gw, gly = text_w(glab, 13, bold=True), (gy + 8 if top else gy - 24)
+        gfx.alpha_rect(s, ((g0 + g1) // 2 - gw // 2 - 6, gly, gw + 12, 19), (250, 250, 251), 220, 6)   # readable over Cas9
+        draw_text(s, glab, ((g0 + g1) // 2, gly + 1), 13, CORAL_D, center=True, bold=True)
         ft, fb = {}, {}
         for i in self.pam:
             (ft if top else fb)[i] = PAM_FILL
@@ -376,7 +381,8 @@ class CutSite(Stage):
             x = self.x0 + self.cut * self.cw - 2
             if self.click != self.cut:
                 aa_polyline(s, GREEN, [(x, y_t - 6), (x, y_b + 32)], 3)
-                draw_text(s, "real cut", (x, y_t - 46), 13, GREEN, center=True, bold=True)
+                # above the DNA, or below it when the guide RNA label takes the space above
+                draw_text(s, "real cut", (x, y_t - 46 if top else y_b + 42), 13, GREEN, center=True, bold=True)
             else:
                 scissors(s, (x, y_t - 22), True)
         if self.level < 2:
@@ -532,7 +538,7 @@ TECH = dict(
              answer=0, why="Cas9 first binds a PAM, then checks whether the neighbouring DNA matches the guide."),
         dict(q="Which strand can a guide target?", options=["Either strand, if there is a PAM on that strand", "Only the top strand", "Only the coding strand", "Only RNA"],
              answer=0, why="A CCN on the top strand is an NGG on the bottom strand."),
-        dict(q="Why are F0 injected fish usually outcrossed before analysis?", options=["They are mosaic; the F1 carry single defined alleles", "They are always sterile", "Cas9 is toxic", "To remove the guide RNA"],
+        dict(q="Why are F0 injected fish usually outcrossed before analysis?", options=["They are mosaic; the F1 fish carry single defined alleles", "They are always sterile", "Cas9 is toxic", "To remove the guide RNA"],
              answer=0, why="Different cells of an F0 fish carry different indels; each F1 fish inherits one allele."),
     ],
     music=dict(name="Guide RNA Groove", bpm=106, beats=4, root=48, mode="mix", prog=[0, 6, 3, 0, 0, 6, 4, 3],

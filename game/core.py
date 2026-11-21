@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """Shared constants, palette, input (mouse + keys), text and save helpers."""
+import base64
+import io
 import json
 import math
 import re
 import os
 import sys
+import tempfile
 import pygame
 
 WEB = sys.platform == "emscripten"      # running in a browser (pygbag build)
@@ -121,25 +124,59 @@ class Input:
 
 
 # ------------------------------------------------------------------ text
+# All text uses Inter (embedded in fontdata.py), with DejaVu Sans for the few characters Inter's
+# subset lacks (superscripts, Greek, maths) and DejaVu Sans Mono for sequences and read-outs.
+# Text is rendered at SS times the size and scaled down: glyph advances then land between pixels
+# instead of being rounded one by one, so the gaps between letters stay even.
+SS = 2
 _fonts = {}
-_NAMES = ["segoeui", "verdana", "helveticaneue", "helvetica", "tahoma", "arial", "dejavusans"]
-_MONO = ["consolas", "couriernew", "menlo", "dejavusansmono", "courier"]
+_data = {}
+_covered = None
+_MAIN = {(False, False): "REGULAR", (True, False): "BOLD", (False, True): "MONO", (True, True): "MONO_BOLD"}
+_MONO_OK = set(range(0x20, 0x7F)) | set(range(0xA0, 0x100)) | {0x2013, 0x2014, 0x2026, 0x2190, 0x2191, 0x2192, 0x2193}
+
+
+def _open(name, px):
+    k = (name, px)
+    f = _fonts.get(k)
+    if f is None:
+        if name not in _data:
+            import fontdata
+            _data[name] = base64.b64decode("".join(getattr(fontdata, name)))
+        try:
+            f = pygame.font.Font(io.BytesIO(_data[name]), px)
+        except Exception:                      # the browser build cannot load fonts from memory
+            path = os.path.join(tempfile.gettempdir(), "labsim-%s.ttf" % name.lower())
+            if not os.path.exists(path) or os.path.getsize(path) != len(_data[name]):
+                with open(path, "wb") as fh:
+                    fh.write(_data[name])
+            f = pygame.font.Font(path, px)
+        _fonts[k] = f
+    return f
 
 
 def font(size, bold=False, mono=False):
-    k = (size, bold, mono)
-    if k not in _fonts:
-        f = None
-        try:
-            path = pygame.font.match_font(_MONO if mono else _NAMES, bold=bold)
-            if path:
-                f = pygame.font.Font(path, size)
-        except Exception:
-            f = None
-        if f is None:
-            f = pygame.font.Font(None, int(size * 1.25))
-        _fonts[k] = f
-    return _fonts[k]
+    """The font at display size (for code that needs a pygame Font; text drawing uses text_surf)."""
+    return _open(_MAIN[(bold, mono)], size)
+
+
+def _runs(t, bold, mono):
+    """Split text into runs drawn with the main face or the fallback face."""
+    global _covered
+    if _covered is None:
+        import fontdata
+        _covered = set(fontdata.INTER_CODEPOINTS)
+    ok = _MONO_OK if mono else _covered
+    main = _MAIN[(bold, mono)]
+    fb = "FALLBACK_BOLD" if bold else "FALLBACK"
+    out = []
+    for ch in t:
+        name = main if (ord(ch) in ok or ch == " ") else fb
+        if out and out[-1][1] == name:
+            out[-1][0] += ch
+        else:
+            out.append([ch, name])
+    return out
 
 
 _PRETTY = [(" deg C", " °C"), (" - ", " – "), ("->", "→"), ("x10^4", "×10⁴"), ("x10^6", "×10⁶")]
@@ -162,9 +199,20 @@ def text_surf(t, size, color, bold=False, mono=False):
     k = (t, size, color, bold, mono)
     s = _tcache.get(k)
     if s is None:
-        if len(_tcache) > 900:
+        if len(_tcache) > 1200:
             _tcache.clear()
-        s = font(size, bold, mono).render(t, True, color)
+        px = size * SS
+        parts = [(_open(name, px), txt) for txt, name in _runs(t, bold, mono)] or [(_open(_MAIN[(bold, mono)], px), "")]
+        asc = max(f.get_ascent() for f, _ in parts)
+        desc = max(-f.get_descent() for f, _ in parts)
+        surfs = [(f.render(txt, True, color), asc - f.get_ascent()) for f, txt in parts]
+        w = max(1, sum(r.get_width() for r, _ in surfs))
+        big = pygame.Surface((w, asc + desc), pygame.SRCALPHA)
+        x = 0
+        for r, dy in surfs:
+            big.blit(r, (x, dy))
+            x += r.get_width()
+        s = pygame.transform.smoothscale(big, (max(1, (w + SS - 1) // SS), max(1, (asc + desc + SS - 1) // SS)))
         _tcache[k] = s
     return s
 
@@ -186,18 +234,23 @@ def draw_text(surf, t, pos, size=18, color=INK, center=False, bold=False, right=
     return s.get_width()
 
 
+def _width(t, size, bold=False, mono=False):
+    px = size * SS
+    w = sum(_open(name, px).size(txt)[0] for txt, name in _runs(t, bold, mono))
+    return (w + SS - 1) // SS
+
+
 def text_w(t, size, bold=False, mono=False):
-    return font(size, bold, mono).size(pretty(str(t)))[0]
+    return _width(pretty(str(t)), size, bold, mono)
 
 
 def wrap(t, size, width, bold=False):
-    f = font(size, bold)
     out = []
     for para in pretty(t).split("\n"):
         line = ""
         for word in para.split(" "):
             test = (line + " " + word) if line else word
-            if f.size(test)[0] <= width:
+            if _width(test, size, bold) <= width:
                 line = test
             else:
                 if line:

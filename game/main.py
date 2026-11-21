@@ -23,7 +23,7 @@ from core import (text_w, W, H, INK, INK_SOFT, MUTED, CARD, PAPER, SAND, PEACH, 
                   NIGHT, WHITE, GREEN, YELLOW, clamp, mix, draw_text, draw_wrapped, wrap)
 from techniques import TECHS, BY_KEY, WINGS
 from station import Station
-from board import Board, total_stars, rank
+from board import Board, total_stars, rank, fit_label
 
 for _t in TECHS:
     audio.register(_t["key"], _t["music"])
@@ -289,11 +289,11 @@ class HowTo:
         gfx.card(s, r, CARD)
         draw_text(s, "Welcome to the lab", (W // 2, 46), 28, INK, center=True, bold=True)
         lines = [
-            ("Board", "Roll the die to move between the 28 benches. Twenty of them are techniques; land on one to play it."),
+            ("Board", "Roll the dice to move between the 28 benches. Twenty of them are techniques; land on one to play it."),
             ("Techniques", "Each technique is a short run of hands-on steps: find reagents, pipette, calculate, time a reaction, read the result."),
             ("Stars", "Every step scores up to 100. The average gives 1 to 3 stars. Pass all 20 techniques to run your own lab."),
             ("Levels", "Choose Student (more time, at most 2 stars), Researcher or Expert (tighter, earns a gold seal) at each bench."),
-            ("Coffee", "From Start, Coffee and Seminar benches, flawless runs and finished wings. Spend one after a roll to move a bench more or less."),
+            ("Coffee", "You earn coffee from Start, Coffee and Seminar benches, flawless runs and finished wings. Spend one after a roll to move a bench more or less."),
             ("Notebook", "Each step ends with a true fact about the technique. They are kept in your lab notebook."),
             ("Binder", "Any technique you have played can be replayed from the protocol binder to improve your stars."),
         ]
@@ -521,21 +521,24 @@ class Binder:
             col = WINGS[t["wing"]]
             gfx.header(s, rr, col if op else (190, 186, 180), 10)
             gfx.icon(s, t["icon"], (rr.x + 34, rr.y + 50), 36)
-            sz = 13
-            lines = wrap(t["full"], sz, rr.w - 70, True)
-            while sz > 10 and (len(lines) > 3 or any(text_w(ln, sz, True) > rr.w - 70 for ln in lines)):
-                sz -= 1
-                lines = wrap(t["full"], sz, rr.w - 70, True)
-            yy = rr.y + 22
-            for ln in lines[:3]:
-                draw_text(s, ln, (rr.x + 62, yy), sz, INK if op else MUTED, bold=True)
-                yy += sz + 4
+            # short name large, full name small below, status line at the bottom
+            tw = rr.w - 74
+            nsz, nlines = fit_label(t["name"], tw, 15, 12)
+            for k, ln in enumerate(nlines):
+                draw_text(s, ln, (rr.x + 64, rr.y + 20 + k * (nsz + 3)), nsz, INK if op else MUTED, bold=True)
+            full = wrap(t["full"], 11, tw) if len(nlines) == 1 else []
+            if full and full[0] != t["name"]:
+                if len(full) > 2:
+                    full = full[:2]
+                    full[1] = full[1].rstrip(" ,") + "…"
+                for k, ln in enumerate(full):
+                    draw_text(s, ln, (rr.x + 64, rr.y + 40 + k * 14), 11, INK_SOFT if op else MUTED)
             if not self.practice:
                 rec = self.app.slot["best"].get(t["key"])
                 for j in range(3):
                     gfx.star(s, rr.right - 52 + j * 18, rr.bottom - 14, 7, bool(rec) and j < rec["stars"])
                 if not op:
-                    draw_text(s, "not visited", (rr.x + 64, rr.bottom - 22), 12, MUTED)
+                    draw_text(s, "not visited", (rr.x + 12, rr.bottom - 21), 12, MUTED)
         if self.hover is not None:
             t = TECHS[self.hover]
             gfx.alpha_rect(s, (0, H - 34, W, 34), CARD, 230)

@@ -3,7 +3,7 @@
 # Lab Simulator
 
 A board game of 20 hands-on minigames on the core techniques of molecular and cell biology,
-from PCR to zebrafish microinjection. Roll the die, walk around the lab, and at each bench
+from PCR to zebrafish microinjection. Roll the dice, walk around the lab, and at each bench
 do the technique yourself: find the reagents in the freezer before your fingers freeze,
 calculate a master mix that does not run out, load a gel without shaking, stop the
 electrophoresis before the dye runs off the end, sort cells, focus a microscope, inject a
@@ -61,7 +61,7 @@ The techniques and their minigames are listed in [DESIGN.md](DESIGN.md).
 | Input | Action |
 | --- | --- |
 | Mouse | Everything: pipetting, clicking, dragging, aiming |
-| Space / Enter | Stop a timed process, confirm, roll the die |
+| Space / Enter | Stop a timed process, confirm, roll the dice |
 | Number keys | Answer questions, type volumes |
 | Arrow keys | Menus; some minigames say so |
 | Esc | Pause |
@@ -89,7 +89,8 @@ steel, instrument screens and the photographic lab background.
 | `game/audio.py` | Procedural music engine (synthesised instruments and drum kit, 32-bar arrangements, side-chain, reverb) and sound effects |
 | `game/techniques.py` | Gathers the 20 techniques and sets each one's track (genre, tempo, key, sound) |
 | `game/gfx.py`, `game/render.py` | Drawing: anti-aliased shapes, shading, soft shadows, glows, procedural textures, lab objects, backgrounds |
-| `game/core.py` | Palette, input, text, saving |
+| `game/core.py` | Palette, input, text (rendered at 2x for even letter spacing), saving |
+| `game/fontdata.py` | Embedded typefaces: Inter (SIL OFL), DejaVu Sans and Sans Mono (Bitstream Vera licence); licences in `game/fonts/`, rebuilt by `tools/make_fontdata.py` |
 | `logo/` | Logo masters (`emblem.svg`, `logo.svg`) and renders; `python tools/make_icon.py` makes the game icons and title logo from them |
 | `tests/run_stages.py` | Plays every minigame with random input and checks it finishes |
 | `tests/run_game.py` | Plays the whole game headless |

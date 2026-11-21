@@ -7,7 +7,7 @@ import gfx
 import render as R
 import real
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, PEACH, CORAL, CORAL_D, SKY, TURQ, TEAL, LAV, VIOLET, WHITE,
-                  GREEN, RED, YELLOW, clamp, mix, lerp, draw_text, draw_wrapped)
+                  GREEN, RED, YELLOW, clamp, mix, lerp, draw_text, draw_wrapped, wrap)
 from stage import Stage, register, TOP, BOTTOM
 from proteins_common import cached, note_card
 
@@ -234,8 +234,8 @@ def _scope_body(s):
 @register("if_focus")
 class IfFocus(Stage):
     title = "Focus the microscope"
-    instr = ("Turn the focus until the cells are sharp, then press Capture (or Space). Drag the outer coarse knob, "
-             "use the mouse wheel or the inner fine knob for fine focus. The sample drifts: keep it sharp, and do not "
+    instr = ("Turn the focus until the cells are sharp, then press Capture (or Space). Drag the outer knob for coarse "
+             "focus; use the mouse wheel or the inner knob for fine focus. The sample drifts: keep it sharp, and do not "
              "linger, because the lamp bleaches the dye while you look.")
     limit = 60
     SIZE = 400
@@ -378,7 +378,7 @@ def scene_bleach(st, s, v):
     st._tmp.blit(nz, (0, 0), special_flags=0)
     nz.set_alpha(None)
     eyepiece(s, st._tmp, (290, 296), 380)
-    panel = pygame.Rect(540, 160, 390, 250)
+    panel = pygame.Rect(540, 160, 390, 262)
     gfx.rrect(s, panel, (44, 42, 66), INK, 2, 14, 0.1)
     draw_text(s, "Dye remaining", (panel.x + 24, panel.y + 20), 15, (230, 230, 240), bold=True)
     gfx.bar(s, (panel.x + 24, panel.y + 46, panel.w - 48, 18), remain, (220, 90, 200), back=(30, 30, 40))
@@ -402,7 +402,8 @@ def draw_fluor(s, r, label):
     gfx.circle(s, (24, 22, 36), c, 18, 2)
     gfx.glow(s, c, 15, col, 0.9)
     gfx.circle(s, col, c, 7, 0)
-    draw_wrapped(s, label, (r.x + 56, r.y + 8), 15, r.w - 64, INK, bold=True)
+    n = len(wrap(label, 15, r.w - 64, True))          # centre the name on the dye disc
+    draw_wrapped(s, label, (r.x + 56, r.centery - n * 10 - 1), 15, r.w - 64, INK, bold=True, lh=20)
 
 
 TECH = dict(
@@ -439,10 +440,10 @@ TECH = dict(
         ("match", dict(title="Dyes and lasers", left_title="Fluorophore", right_title="Excitation and emission",
                        instr="Match each dye to the laser that excites it and the colour it gives off.", tint=(60, 58, 84),
                        draw_left=draw_fluor, left_col=(250, 248, 240),
-                       pairs=[("DAPI (binds DNA)", "405 nm laser, blue light around 460 nm", "DAPI binds DNA and marks nuclei; a 405 nm laser excites it on most confocals."),
-                              ("Alexa Fluor 488 (like GFP)", "488 nm laser, green light around 520 nm", "The 488 nm line excites GFP and Alexa 488."),
-                              ("mCherry (red protein)", "561 nm laser, red light around 610 nm", "mCherry is derived from DsRed, a red protein from a Discosoma sea anemone."),
-                              ("Alexa Fluor 647 (far red)", "640 nm laser, far-red light around 670 nm", "Far-red light is hard to see by eye, but the camera picks it up well.")])),
+                       pairs=[("DAPI (binds DNA)", "405 nm laser, blue light near 460 nm", "DAPI binds DNA and marks nuclei; a 405 nm laser excites it on most confocals."),
+                              ("Alexa Fluor 488 (like GFP)", "488 nm laser, green light near 520 nm", "The 488 nm line excites GFP and Alexa 488."),
+                              ("mCherry (red protein)", "561 nm laser, red light near 610 nm", "mCherry is derived from DsRed, a red protein from a Discosoma sea anemone."),
+                              ("Alexa Fluor 647 (far red)", "640 nm laser, far-red light near 670 nm", "Far-red light is hard to see by eye, but the camera picks it up well.")])),
         ("if_focus", dict(fields=3)),
         ("stop", dict(title="Capture before it fades", scene=scene_bleach, dur=8.0, ideal=0.55, window=(0.38, 0.78), rounds=2,
                       readout=lambda v: "exp %4d ms" % (v * 2000),

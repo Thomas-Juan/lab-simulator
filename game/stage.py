@@ -648,6 +648,13 @@ class StopStage(Stage):
 
 
 # ======================================================================= Match
+def _mid(r, text, bold):
+    """Top y that centres wrapped 15 px text vertically in rect r."""
+    n = len(wrap(text, 15, r.w - 20, bold))
+    return r.centery - (n * int(15 * 1.38)) // 2 + 1
+
+
+
 @register("match")
 class MatchStage(Stage):
     """Connect each item on the left with its partner on the right.
@@ -736,7 +743,7 @@ class MatchStage(Stage):
             if self.p.get("draw_left"):
                 self.p["draw_left"](s, r, self.pairs[i][0])
             else:
-                draw_wrapped(s, self.pairs[i][0], (r.x + 10, r.y + 8), 15, r.w - 20, INK, bold=True, center=True)
+                draw_wrapped(s, self.pairs[i][0], (r.x + 10, _mid(r, self.pairs[i][0], True)), 15, r.w - 20, INK, bold=True, center=True)
         for k, r in enumerate(R):
             j = self.rorder[k]
             col = self.p.get("right_col", CARD)
@@ -748,7 +755,7 @@ class MatchStage(Stage):
             if self.p.get("draw_right"):
                 self.p["draw_right"](s, r, self.pairs[j][1])
             else:
-                draw_wrapped(s, self.pairs[j][1], (r.x + 10, r.y + 8), 15, r.w - 20, INK, center=True)
+                draw_wrapped(s, self.pairs[j][1], (r.x + 10, _mid(r, self.pairs[j][1], False)), 15, r.w - 20, INK, center=True)
         if self.sel is not None:
             gfx.line(s, CORAL, lpos[self.sel].midright, getattr(self, "mouse", lpos[self.sel].midright), 3)
         if self.why:

@@ -237,7 +237,9 @@ class PourStage(Stage):
                 if len(self.pokes) > self.free_pokes:
                     audio.sfx("bad")
                     self.shake = 6
-                    self.floaters.add(inp.mouse[0], inp.mouse[1] - 18, "hole in the gel", RED, 15)
+                    if self.t - getattr(self, "_hole_t", -99) >= 30:     # one label at a time, or they pile up
+                        self._hole_t = self.t
+                        self.floaters.add(inp.mouse[0], inp.mouse[1] - 18, "hole in the gel", RED, 15)
                 else:
                     audio.sfx("tick")
         if not self.spawn and not self.bubbles and self.comb_in:

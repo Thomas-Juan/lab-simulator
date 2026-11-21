@@ -13,7 +13,7 @@ Copies one chosen stretch of DNA millions of times, so that it can be seen on a 
 *Music: Thermal Cycle* (dor, 114 bpm, keys lead)
 
 1. **Raid the -20°C freezer.** Find the 7 PCR reagents in the freezer box before your fingers freeze. Hover to read a label, click to take it. Wrong tubes cost 3 seconds.
-2. **Make the master mix.** Type the total volume of each reagent for the whole master mix, then hand it out: 24 µL into every PCR tube. Pipettes are never perfect, so plan for it.
+2. **Make the master mix.** Type the total volume of each reagent for the whole master mix, then dispense it: 24 µL into every PCR tube. Pipettes are never perfect, so plan for it.
 3. **Program the thermocycler.** Set the temperatures, the extension time and the number of cycles for this primer pair and product, then press Run.
 4. **Load the gel.** Move the pipette tip over the flashing well and hold the mouse button to push the sample in. Your hand shakes more when you move fast or hold too long. Hold Space to rest your elbow on the bench: steadier, but only for a few seconds at a time. Sample outside the well is lost.
 5. **Run the gel.** Current is on: the purple loading dye runs towards the red (+) electrode. Click or press Space to stop when the dye front is about three quarters down the gel, before it runs off.
@@ -99,7 +99,7 @@ A guide RNA leads the Cas9 enzyme to one place in the genome, where it cuts both
 
 *Music: Cut Site* (phr, 88 bpm, brass lead)
 
-1. **Find the PAMs.** Cas9 can only cut next to a PAM: the sequence NGG (any base, then two Gs). Click every NGG on the top strand (a CCN is a bonus: an NGG on the bottom strand). Then pick the PAM you will use for your guide.
+1. **Find the PAMs.** Cas9 can only cut next to a PAM: the sequence NGG (any base, then two Gs). Click every NGG on the top strand (a CCN counts as a bonus: it is an NGG on the bottom strand). Then pick the PAM you will use for your guide.
 2. **Choose a guide.** Pick the guide RNA that will give a clean knockout.
 3. **Where does Cas9 cut?.** The guide RNA leads Cas9 to the 20 bases next to the PAM. Cas9 cuts both strands 3 bases upstream of the PAM. Click the gap where it cuts.
 4. **Did it work?.** Genotyping results from injected embryos and their offspring. What do they show?
@@ -111,7 +111,7 @@ Shows where in the embryo a gene is switched on, by letting a labelled RNA probe
 *Music: Sixty-Five Degrees* (harm, 84 bpm, keys lead)
 
 1. **The protocol.** Click the steps of a whole-mount in situ in the right order.
-2. **Proteinase K.** Proteinase K opens the tissue for the probe. Click (or Space) to stop the digest at the right time.
+2. **Proteinase K.** Proteinase K opens the tissue for the probe. Click (or press Space) to stop the digest at the right time.
 3. **Watch the colour.** The purple stain develops over hours. Top: antisense probe (the real pattern). Bottom: sense probe (should stay clean). Click or press Space when the pattern is strong and the control still pale.
 4. **Controls.** Antisense, sense and why the protocol works.
 
@@ -167,7 +167,7 @@ Shows where a protein sits inside cells. Antibodies carrying fluorescent dyes bi
 *Music: Confocal* (lyd, 90 bpm, lead_soft lead)
 
 1. **Dyes and lasers.** Match each dye to the laser that excites it and the colour it gives off.
-2. **Focus the microscope.** Turn the focus until the cells are sharp, then press Capture (or Space). Drag the outer coarse knob, use the mouse wheel or the inner fine knob for fine focus. The sample drifts: keep it sharp, and do not linger, because the lamp bleaches the dye while you look.
+2. **Focus the microscope.** Turn the focus until the cells are sharp, then press Capture (or Space). Drag the outer knob for coarse focus; use the mouse wheel or the inner knob for fine focus. The sample drifts: keep it sharp, and do not linger, because the lamp bleaches the dye while you look.
 3. **Capture before it fades.** The exposure rises step by step while the lamp bleaches the dye. Capture when the image is brightest, before the fading wins.
 4. **Antibodies and controls.** Click the right answer (or press 1-4).
 
@@ -179,7 +179,7 @@ Growing cells outside the body, in flasks of medium at 37 °C, without letting b
 
 *Music: Laminar Flow* (dor, 86 bpm, keys lead)
 
-1. **Keep it sterile.** Microbes drift into the hood from the room. Click them to spray 70 % ethanol before they reach the open flask. Don't put your hands on the empty front grille: blocking it breaks the air curtain. Spraying at nothing disturbs the airflow too.
+1. **Keep it sterile.** Microbes drift into the hood from the room. Click them to spray 70 % ethanol before they reach the open flask. Don't put your hands on the front grille: blocking it breaks the air curtain. Spraying at nothing disturbs the airflow too.
 2. **Time to split?.** Look at the flask in the microscope and decide what to do.
 3. **Trypsin.** Trypsin is loosening the cells. Click (or press Space) when most cells float free, before they get damaged.
 4. **Split the cells.** Type the answer and press Enter. Use the keypad or the keyboard.

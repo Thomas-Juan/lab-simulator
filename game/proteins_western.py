@@ -98,7 +98,7 @@ class WesternStack(OrderStage):
             s.blit(tex, lay.topleft)
             if k == "gel":
                 gfx.alpha_rect(s, (lay.x, lay.y, lay.w, 2), WHITE, 140)
-                for i in range(6):
+                for i in range(5):           # stop short of the "Gel" label on the right
                     gfx.alpha_rect(s, (lay.x + 20 + i * 46, lay.centery - 1, 26, 3), (60, 70, 150), 150, 1)
             pygame.draw.line(s, (255, 255, 255), lay.topleft, lay.topright, 1)
             pygame.draw.line(s, R.lighten(tex.get_at((2, 2))[:3], -0.35), lay.bottomleft, lay.bottomright, 1)
@@ -285,7 +285,7 @@ def scene_exposure(st, s, v):
     pygame.draw.rect(s, (236, 236, 240), scr)
     bar = pygame.Rect(scr.x, scr.y, scr.w, 24)
     pygame.draw.rect(s, (60, 64, 80), bar)
-    draw_text(s, "Image Lab  -  Chemi Hi Sensitivity  -  exposure", (bar.x + 10, bar.centery), 12, (226, 230, 240), bold=True, vcenter=True)
+    draw_text(s, "Image Lab - Chemi Hi Sensitivity - exposure", (bar.x + 10, bar.centery), 12, (226, 230, 240), bold=True, vcenter=True)
     gfx.led(s, (bar.right - 14, bar.centery), (240, 80, 70) if st.state == "run" else (120, 120, 130), st.state == "run", 4)
     mem = pygame.Rect(scr.x + 150, scr.y + 40, scr.w - 170, scr.h - 60)
     bgv = 248 - int(46 * v ** 2)

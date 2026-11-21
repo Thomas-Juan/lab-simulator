@@ -20,7 +20,7 @@ ACID = (232, 196, 90)         # phenol red turns yellow when acidic
 class CultureHood(Stage):
     title = "Keep it sterile"
     instr = ("Microbes drift into the hood from the room. Click them to spray 70 % ethanol before they reach "
-             "the open flask. Don't put your hands on the empty front grille: blocking it breaks the air curtain. "
+             "the open flask. Don't put your hands on the front grille: blocking it breaks the air curtain. "
              "Spraying at nothing disturbs the airflow too.")
     limit = 30
 
@@ -498,7 +498,7 @@ def _trypsin_scene(st, s, v):
                     for k in range(3):
                         gfx.alpha_circle(f, (236, 240, 228), (cx + math.cos(ph + k * 2) * 10, cy + math.sin(ph + k * 2) * 10), 3, 150)
     masked_field(s, c, R, field, blur=1.0)
-    draw_text(s, "20x phase contrast", (c[0], c[1] + R + 2), 11, (170, 172, 180), center=True)
+    draw_text(s, "20x phase contrast", (c[0], c[1] + R - 3), 11, (170, 172, 180), center=True)
     p = pygame.Rect(570, TOP + 100, 360, 300)
     gfx.card(s, p, CARD)
     det = int(100 * clamp((v - 0.3) / 0.4, 0, 1))

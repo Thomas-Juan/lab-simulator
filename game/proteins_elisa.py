@@ -225,7 +225,7 @@ def scene_tmb(st, s, v):
     elif st.state == "over":
         txt = "Too late: the top standards saturated and the blank turned blue, so the curve is flat at the top."
     else:
-        txt = "HRP turns TMB blue. Stop when the standards form a clear gradient, before the top ones max out and the blank colours."
+        txt = "HRP turns TMB blue. Stop when the standards form a clear gradient, before the top ones max out and the blank turns blue."
     std = getattr(st.ctx, "elisa_std", None)
     if std:
         r = getattr(st.ctx, "elisa_r", 2)
@@ -321,7 +321,7 @@ class ElisaDilute(Stage):
             self.mass[i] -= m
             self.tip = (v, m)
             if v < self.setv:
-                self.floaters.add(self.wx[i], self.wy - 100, "Air in the tip!", CORAL_D, 16)
+                self.floaters.add(self.wx[i], self.wy - 106, "Air in the tip!", CORAL_D, 16)   # clear of "Not mixed!"
         else:
             v, m = self.tip
             self.vol[i] += v
@@ -539,7 +539,7 @@ TECH = dict(
         dict(q="A sample's OD is higher than your top standard. What do you do?", options=["Dilute it and run it again",
              "Extrapolate the curve", "Report the top standard's value", "Read it at a different wavelength"], answer=0,
              why="Values outside the standard curve are unreliable. Dilute into the range and multiply back."),
-        dict(q="Why do you subtract the blank?", options=["To remove the colour from background and the reagents themselves",
+        dict(q="Why do you subtract the blank?", options=["To subtract the colour given by the background and the reagents themselves",
              "To correct for pipetting errors", "To convert OD to concentration", "To normalise to total protein"], answer=0,
              why="The blank has every reagent but no antigen, so its OD is background."),
         dict(q="What does the stop solution do?", options=["Acid stops HRP and turns the blue product yellow",

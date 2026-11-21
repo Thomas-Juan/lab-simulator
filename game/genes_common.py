@@ -8,6 +8,7 @@ import pygame
 import gfx
 import render as R
 import real
+import core
 from render import lighten
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, CORAL, TURQ, TEAL, LAV, VIOLET, WHITE, GREEN, RED, YELLOW,
                   BASE_COL, draw_text, mix, clamp, text_surf)
@@ -20,6 +21,12 @@ except Exception:  # pragma: no cover
 
 COMP = {"A": "T", "T": "A", "C": "G", "G": "C", "N": "N"}
 BASE_TINT = {b: mix(c, WHITE, 0.82) for b, c in BASE_COL.items()}
+
+
+def float_x(x, txt, size, margin=14):
+    """x for a rising floater text (centred on x) so the whole text stays on screen."""
+    hw = core.text_w(txt, size, bold=True) / 2.0 + 4
+    return clamp(x, margin + hw, W - margin - hw)
 
 
 def revcomp(s):

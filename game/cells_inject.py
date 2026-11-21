@@ -192,7 +192,7 @@ def _reticle():
         if um % 100 == 0:
             draw_text(sf, str(um), (x, ry + 4), 13, (44, 42, 40), center=True, bold=True)
     gfx.line(sf, (44, 42, 40), (x0, ry), (x0 + 200 * PXUM, ry), 2)
-    draw_text(sf, "µm", (x0 + 200 * PXUM + 14, ry - 8), 13, (44, 42, 40), bold=True)
+    draw_text(sf, "µm", (x0 + 200 * PXUM + 8, ry - 18), 13, (44, 42, 40), bold=True)     # above-right of the "200", inside the field
     sf = soften(sf, 1.25)
     _LAYER["ret"] = sf
     return sf
@@ -237,7 +237,7 @@ class InjectCalib(Stage):
                 self.r += 1
                 self.vol = 0
                 if self.r >= len(self.targets):
-                    fb = ["Target %.1f nL, you injected %.2f nL." % (t, v) for t, v in self.res]
+                    fb = ["Target %.1f nL; you injected %.2f nL." % (t, v) for t, v in self.res]
                     # the 1 nL bolus is the one you will inject: its error carries into the next step
                     ratio = [v / t for t, v in self.res if abs(t - 1.0) < 1e-6]
                     self.ctx.inject_cal = ratio[0] if ratio else (self.res[0][1] / self.res[0][0])
@@ -255,7 +255,7 @@ class InjectCalib(Stage):
         self.state = "show"
         self.wait = 110
         audio.sfx("good" if sc >= 75 else "bad")
-        self.floaters.add(560, 120, "%.2f nL" % self.vol, GREEN if sc >= 75 else CORAL_D, 26)
+        self.floaters.add(815, TOP + 380, "%.2f nL" % self.vol, GREEN if sc >= 75 else CORAL_D, 26)   # on the card, not over the bolus
         if sc >= 80:
             self.particles.burst(560, 236, 16)
 
@@ -303,7 +303,7 @@ class InjectCalib(Stage):
         s.set_clip(clip)
         from cells_common import _scope_overlay, EYE
         s.blit(_scope_overlay(R_, EYE, False), (c[0] - R_ - 14, c[1] - R_ - 14))
-        draw_text(s, "mineral oil on a stage micrometer, 10x", (c[0], c[1] + R_ + 1), 11, (170, 172, 180), center=True)
+        draw_text(s, "mineral oil on a stage micrometer, 10x", (c[0], c[1] + R_ - 3), 11, (170, 172, 180), center=True)
         p = pygame.Rect(690, TOP + 20, 250, 420)
         gfx.card(s, p, CARD)
         k = min(self.r, len(self.targets) - 1)
@@ -467,7 +467,7 @@ class InjectEmbryos(Stage):
                 break
             else:
                 if not self.agar_t:
-                    self.floaters.add(self.tip[0], self.tip[1] - 30, "tip in the agarose", MUTED, 15)
+                    self.floaters.add(clamp(self.tip[0], 90, W - 90), max(TOP + 56, self.tip[1] - 30), "tip in the agarose", MUTED, 15)
                     self.agar_t = 40
         if self.cur is not None:
             e, wh, dx, dy = self.cur
@@ -547,7 +547,7 @@ class InjectEmbryos(Stage):
                 pygame.draw.arc(s, (30, 30, 36), (cx - r, cy - r, 2 * r, 2 * r), a, a + 0.2, 2)
         needle(s, self.tip, 0.6, length=320, width=16)
         mins = int(self.t / 60.0)
-        draw_text(s, "%d min into the session (sped up). At 28.5 °C each embryo divides about 45 min after fertilisation." % mins,
+        draw_text(s, "%d min in (sped up). At 28.5 °C embryos first divide about 45 min after fertilisation." % mins,
                   (W - 34, VIEW.bottom + 12), 12, (196, 198, 206), right=True, bold=True)
         gfx.tag(s, W - 200, TOP + 12, "Injected %d / %d" % (sum(1 for e in self.emb if e.inj), len(self.emb)), CARD, 15)
 

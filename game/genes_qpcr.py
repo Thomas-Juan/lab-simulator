@@ -10,7 +10,7 @@ from render import lighten
 from stage import Stage, register, TOP, BOTTOM
 from genes_common import plot_box, aa_polyline, window, desktop
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, CORAL, CORAL_D, TURQ, TEAL, LAV, VIOLET, SKY, WHITE,
-                  GREEN, RED, YELLOW, BLUE, draw_text, draw_wrapped, mix, clamp)
+                  GREEN, RED, YELLOW, BLUE, draw_text, draw_wrapped, mix, clamp, text_w, wrap)
 
 CURVE_COLS = [CORAL, TURQ, VIOLET, (214, 150, 60), BLUE, GREEN]
 
@@ -99,11 +99,15 @@ class Threshold(Stage):
 
     def row_rect(self, k):
         _, inner = self.panel()
-        return pygame.Rect(inner.x, inner.y + 88 + k * 30, inner.w, 28)
+        return pygame.Rect(inner.x, inner.y + 88 + k * self.row_step(), inner.w, self.row_step() - 2)
+
+    def row_step(self):
+        # tighter rows on big plates, so the button and the NTC note below still fit
+        return 30 if len(self.curves) <= 5 else 26
 
     def fine_btn(self):
         _, inner = self.panel()
-        return gfx.Button((inner.x + 20, inner.y + 96 + len(self.curves) * 30, inner.w - 40, 34), "All wells fine", (206, 236, 210), size=15)
+        return gfx.Button((inner.x + 20, inner.y + 96 + len(self.curves) * self.row_step(), inner.w - 40, 34), "All wells fine", (206, 236, 210), size=15)
 
     def tick(self, inp):
         self._mouse = inp.mouse
@@ -200,14 +204,21 @@ class Threshold(Stage):
             yl, yh = ymap(P, self.lo), ymap(P, self.hi)
             gfx.alpha_rect(s, (P.x + 2, yl, P.w - 4, P.bottom - yl - 2), (150, 150, 160), 55)
             gfx.alpha_rect(s, (P.x + 2, yh, P.w - 4, yl - yh), GREEN, 50)
-            draw_text(s, "baseline noise", (P.right - 8, P.bottom - 20), 13, MUTED, right=True, bold=True)
-            draw_text(s, "exponential phase", (P.right - 8, yh + 4), 13, (40, 120, 50), right=True, bold=True)
         clip = s.get_clip()
         s.set_clip(P.inflate(-2, -2))
         for k, (name, col, vals, _) in enumerate(self.curves):
             pts = [(xmap(P, c + 1), ymap(P, v)) for c, v in enumerate(vals)]
             hl = self.state == "flag" and self.row_rect(k).collidepoint(getattr(self, "_mouse", (0, 0)))
             aa_polyline(s, col, pts, 4 if hl else (2.5 if name != "NTC" else 2))
+        if self.state != "aim":
+            # band labels on a pale backing, drawn over the curves so they stay readable; the
+            # exponential-phase label takes the end of its band farthest from the threshold line
+            yl, yh, yt = ymap(P, self.lo), ymap(P, self.hi), ymap(P, self.thr)
+            ety = yl - 21 if yt < (yl + yh) / 2 else yh + 3
+            for txt, ty, col in (("baseline noise", P.bottom - 21, MUTED), ("exponential phase", ety, (40, 120, 50))):
+                tw = text_w(txt, 13, bold=True)
+                gfx.alpha_rect(s, (P.right - 14 - tw, ty, tw + 10, 18), WHITE, 215, 4)
+                draw_text(s, txt, (P.right - 9, ty + 1), 13, col, right=True, bold=True)
         y = ymap(P, self.thr)
         tcol = CORAL_D if self.state == "aim" else INK
         aa_polyline(s, tcol, [(P.x, y), (P.right, y)], 3)
@@ -247,10 +258,10 @@ class Threshold(Stage):
             self.fine_btn().draw(s)
         elif self.state == "shown":
             msg = self.msgs[-1]
-            draw_wrapped(s, msg, (inner.x + 4, inner.y + 96 + len(self.curves) * 30), 13, inner.w - 8, GREEN if self.flag == "ok" else CORAL_D, bold=True)
+            draw_wrapped(s, msg, (inner.x + 4, inner.y + 96 + len(self.curves) * self.row_step()), 13, inner.w - 8, GREEN if self.flag == "ok" else CORAL_D, bold=True)
         if self.state != "shown":
-            draw_wrapped(s, "NTC = no-template control. It should not cross the threshold, or only very late from primer dimer.",
-                         (inner.x + 4, inner.bottom - 40), 13, inner.w - 8, INK_SOFT)
+            note = "NTC = no-template control. It should not cross the threshold, or only very late from primer dimer."
+            draw_wrapped(s, note, (inner.x + 4, inner.bottom - 8 - len(wrap(note, 13, inner.w - 8)) * 17), 13, inner.w - 8, INK_SOFT, lh=17)
 
 
 def melt_pic(kinds):
@@ -335,7 +346,7 @@ def ddct(rng):
         gfx.rrect(s, T, WHITE, (150, 154, 160), 1, 3, 0, False)
         gfx.header(s, T, TEAL, 28, 8)
         cols = [T.x + 14, T.x + 200, T.x + 350]
-        for j, h in enumerate(["Sample", "Gene X  Ct", "Reference  Ct"]):
+        for j, h in enumerate(["Sample", "Gene X Ct", "Reference Ct"]):
             draw_text(s, h, (cols[j], T.y + 16), 14, WHITE, bold=True, vcenter=True)
         for i, (name, a, b) in enumerate((("Control", tc, rc), ("Treated", tt, rt))):
             y = T.y + 44 + i * 30

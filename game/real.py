@@ -188,8 +188,8 @@ def pipette_body(k):
     disp = pygame.Rect(int(cx - 8 * u), int(86 * u), int(16 * u), int(24 * u))
     pygame.draw.rect(big, (30, 32, 36), disp, border_radius=int(2 * u))
     for i, d in enumerate("020"):
-        f = pygame.font.SysFont("consolas", max(8, int(7 * u)), bold=True)
-        t = f.render(d, True, (240, 240, 230))
+        import core
+        t = core.text_surf(d, max(8, int(7 * u)), (240, 240, 230), True, True)
         big.blit(t, (disp.centerx - t.get_width() // 2, disp.y + int(1 * u) + i * int(7.5 * u)))
     part((cx + 9 * u, 30 * u, 8 * u, 30 * u), (214, 216, 220), 3 * u)                   # ejector button
     part((cx - 6 * u, 122 * u, 12 * u, 46 * u), (232, 234, 236), 3 * u)                  # shaft

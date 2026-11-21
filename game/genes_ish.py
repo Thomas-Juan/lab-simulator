@@ -8,7 +8,7 @@ import gfx
 import render as R
 from stage import Stage, register, TOP, BOTTOM
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, PEACH, CORAL, CORAL_D, TURQ, TEAL, LAV, VIOLET, SKY,
-                  WHITE, GREEN, RED, YELLOW, draw_text, draw_wrapped, mix, clamp)
+                  WHITE, GREEN, RED, YELLOW, draw_text, draw_wrapped, mix, clamp, wrap)
 from genes_common import embryo, window, aa_polyline, scope_field, brightfield
 
 PROBE = (120, 70, 170)
@@ -237,13 +237,15 @@ class StainStage(Stage):
                  ("%s marks %s. Expression: %s." % (self.gene, self.what, self.sname), 14, INK_SOFT, False)]
         if self.hpf == 48:
             lines.append(("Raised in PTU: no pigment.", 13, MUTED, False))
-        inner, y = side_panel(s, "%s probe  ·  embryo %d of %d" % (self.gene, self.r + 1, len(self.plan)), lines)
+        inner, y = side_panel(s, "%s probe" % self.gene, lines)       # the embryo count is on the tag above
         box = pygame.Rect(inner.right - 120, inner.y - 40 - 52, 120, 40)
         gfx.screen_rect(s, box, (30, 38, 34))
         draw_text(s, self.hours(v), box.center, 20, (140, 255, 170), center=True, bold=True, mono=True, vcenter=True)
         if self.level == 0:
             draw_text(s, "A good stain looks like this:", (inner.x + 6, y + 2), 13, INK_SOFT, bold=True)
-            ph = pygame.Rect(inner.x + 6, y + 22, inner.w - 12, 92)
+            # the example photo shrinks when the result message needs the room
+            msg_h = len(wrap(self.msg, 14, inner.w - 12)) * 18 if self.state != "run" else 0
+            ph = pygame.Rect(inner.x + 6, y + 22, inner.w - 12, max(60, min(92, inner.bottom - 38 - msg_h - (y + 22))))
             s.blit(brightfield(ph.w, ph.h, 21), ph.topleft)
             pygame.draw.rect(s, (120, 120, 126), ph, 1)
             clip = s.get_clip()
@@ -253,7 +255,7 @@ class StainStage(Stage):
             s.set_clip(clip)
             y = ph.bottom + 6
         if self.state != "run":
-            draw_wrapped(s, self.msg, (inner.x + 6, y + 6), 14, inner.w - 12, GREEN if self.scores[-1] >= 85 else CORAL_D, bold=True)
+            draw_wrapped(s, self.msg, (inner.x + 6, y + 6), 14, inner.w - 12, GREEN if self.scores[-1] >= 85 else CORAL_D, bold=True, lh=18)
             draw_text(s, "Best: about %s" % self.hours(self.best_v), (inner.x + 6, inner.bottom - 22), 14, INK, bold=True)
         if len(self.plan) > 1:
             gfx.tag(s, W - 20 - 110, TOP + 6, "Embryo %d of %d" % (self.r + 1, len(self.plan)), CARD, 14)
@@ -327,7 +329,7 @@ TECH = dict(
     stages=[
         ("order", dict(title="The protocol", instr="Click the steps of a whole-mount in situ in the right order.", steps=ISH_ORDER,
                        heading="In situ, days 1-3", tint=LAV, limit=70)),
-        ("stop", dict(title="Proteinase K", instr="Proteinase K opens the tissue for the probe. Click (or Space) to stop the digest at the right time.",
+        ("stop", dict(title="Proteinase K", instr="Proteinase K opens the tissue for the probe. Click (or press Space) to stop the digest at the right time.",
                       scene=protk_scene, dur=7.0, ideal=0.625, window=(0.44, 0.81), rounds=2, jitter=0.15,
                       readout=lambda v: "%4.1f min" % (v * 16),
                       early_msg="Too short: the probe cannot get into the tissue, so the stain will be weak.",

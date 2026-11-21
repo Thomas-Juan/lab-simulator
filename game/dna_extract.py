@@ -73,6 +73,7 @@ class InvertStage(Stage):
                 self.count = 0
                 self.flip = False
                 audio.sfx("pour")
+                self.floaters.f.clear()           # the lysis messages would sit on top of this one
                 self.floaters.add(480, TOP + 60, "Neutralisation buffer in", TEAL, 22)
                 return
         top, bot = TOP + 80, BOTTOM - 60
@@ -88,7 +89,8 @@ class InvertStage(Stage):
             self.rough += 1
             if self.rough % 20 == 1:
                 audio.sfx("bad")
-                self.floaters.add(480, TOP + 60, "Too rough!", RED, 24)
+                if self.rough % 60 == 1:          # one label at a time, beside the speed gauge
+                    self.floaters.add(660, TOP + 60, "Too rough!", RED, 24)
                 self.shake = 10
         if self.angle > 165:
             self.flip = True
@@ -100,7 +102,7 @@ class InvertStage(Stage):
                 self.floaters.add(480, TOP + 90, "%d" % self.count, GREEN, 30)
                 if self.phase == "lyse" and self.count == self.N:
                     self.lyse_done_t = self.t
-                    self.floaters.add(480, TOP + 120, "Evenly blue: add the neutralisation buffer", TEAL, 18)
+                    self.floaters.add(480, TOP + 134, "Evenly blue: add the neutralisation buffer", TEAL, 18)
                 if self.phase == "neutral" and self.count == self.N:
                     self.finish(*self.result())
 
@@ -239,7 +241,7 @@ class InvertStage(Stage):
         # speed gauge
         gfx.card(s, (780, TOP + 20, 140, BOTTOM - TOP - 40), CARD)
         draw_text(s, "Speed", (850, TOP + 34), 18, INK, center=True, bold=True)
-        g = pygame.Rect(830, TOP + 70, 40, 340)
+        g = pygame.Rect(814, TOP + 70, 72, 340)     # wide enough for its "too rough" label
         gfx.rrect(s, g, (250, 214, 204), INK, 2, 10, 0.0, False)
         ra = self.rough_at
         green = pygame.Rect(g.x + 2, g.bottom - int(g.h * ra / 20.0), g.w - 4, int(g.h * (ra - 2) / 20.0))
@@ -356,7 +358,7 @@ class BalanceStage(Stage):
     def next_round(self):
         self.r += 1
         if self.r >= len(self.rounds):
-            fb = ["Rotor balanced at the first try in %d of 3 runs." % self.first_try]
+            fb = ["Rotor balanced on the first try in %d of 3 runs." % self.first_try]
             if self.level == 2:
                 fb.append("Tubes of different mass do not balance each other: put a tube of the same mass opposite each one, or space three equal tubes 120 degrees apart.")
             fb.append("Opposite tubes cancel out; three equal tubes spaced 120 degrees apart also balance.")
@@ -516,7 +518,7 @@ def spectrum_pic(a260, r280, r230):
 
 DIAG = [
     ("clean", 1.86, 2.15, "Clean DNA, ready to use", "Both ratios are in range: about 1.8 for 260/280 and 2.0-2.2 for 260/230."),
-    ("protein", 1.48, 1.9, "Protein contamination", "A low 260/280 ratio means something absorbs at 280 nm: protein or phenol. The ratio is insensitive to protein, so a value this low means a lot of contamination."),
+    ("protein", 1.48, 1.9, "Protein contamination", "A low 260/280 ratio means something absorbs at 280 nm: protein or phenol. The ratio is relatively insensitive to protein, so a value this low means a lot of contamination."),
     ("salt", 1.82, 0.95, "Guanidine salt or phenol carried over", "A low 260/230 ratio and a strong 230 nm peak point to guanidine salts or phenol from the extraction."),
 ]
 

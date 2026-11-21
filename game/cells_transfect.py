@@ -203,7 +203,7 @@ def _complex_scene(st, s, v):
     masked_field(s, c, R_, field, blur=1.0)
     gfx.rrect(s, (c[0] - 60, c[1] + R_ - 30, 50, 4), (240, 240, 240), None, 0, 1, 0, False)
     draw_text(s, "250 nm", (c[0] - 35, c[1] + R_ - 46), 11, (240, 240, 240), center=True, bold=True)
-    draw_text(s, "cryo-electron micrograph (illustration)", (c[0], c[1] + R_ + 2), 11, (170, 172, 180), center=True)
+    draw_text(s, "cryo-electron micrograph (illustration)", (c[0], c[1] + R_ - 3), 11, (170, 172, 180), center=True)
     p = pygame.Rect(580, TOP + 100, 350, 300)
     gfx.card(s, p, CARD)
     draw_text(s, "In serum-free medium", (p.x + 16, p.y + 14), 17, INK, bold=True)
@@ -425,7 +425,7 @@ def _eff_q(rng, k=None):
         s.blit(f, rect.topleft)
         gfx.rrect(s, (rect.right - 70, rect.bottom - 36, 50, 4), (230, 230, 230), None, 0, 1, 0, False)
         draw_text(s, "50 µm", (rect.right - 45, rect.bottom - 52), 11, (230, 230, 230), center=True, bold=True)
-        draw_text(s, "blue: DNA stain (all nuclei)   green: GFP", (rect.centerx, rect.bottom - 22), 12, (220, 220, 230), center=True)
+        draw_text(s, "Blue: DNA stain (all nuclei). Green: GFP.", (rect.centerx, rect.bottom - 22), 12, (220, 220, 230), center=True)
     return dict(q="Two days later. Blue: all nuclei. Green: cells making GFP. About what fraction was transfected?",
                 options=["about %d %%" % e for e in EFF], answer=k, keep_order=True, pic=pic,
                 why="Green cells divided by all nuclei. Easy lines such as HEK293 often pass 50 %.")

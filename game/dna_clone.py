@@ -8,7 +8,7 @@ from stage import Stage, register, TOP, BOTTOM
 from core import (W, H, INK, INK_SOFT, MUTED, CARD, SAND, PEACH, CORAL, CORAL_D, SKY, TURQ, TEAL, LAV, VIOLET,
                   WHITE, GREEN, RED, YELLOW, BASE_COL, clamp, mix, draw_text, draw_wrapped, text_w)
 
-from dna_common import plasmid
+from dna_common import plasmid, float_x
 
 SITES = {"EcoRI": ("GAATTC", CORAL), "BamHI": ("GGATCC", TURQ), "HindIII": ("AAGCTT", VIOLET)}
 COLS, ROWS = 50, 10
@@ -28,7 +28,7 @@ class SitesStage(Stage):
         self.penalty = self.lv(5, 8, 12)
         n_decoy = self.lv(0, 2, 4)
         names = " and ".join("every %s site (%s)" % (nm, SITES[nm][0]) for nm, _ in want)
-        self.instr = ("Click %s in the plasmid sequence. Read all six letters: one wrong base and the enzyme does not cut. "
+        self.instr = ("Click %s in the plasmid sequence. Read every letter of the site: one wrong base and the enzyme does not cut. "
                       "Clicking elsewhere costs points." % names)
         while True:
             seq = [rng.choice("ACGT") for _ in range(n)]
@@ -100,7 +100,8 @@ class SitesStage(Stage):
         for d, name in self.decoys:
             if d <= i < d + 6:
                 self.near = getattr(self, "near", 0) + 1
-                self.floaters.add(inp.mouse[0], inp.mouse[1] - 20, "not %s: one base off" % name, RED, 15)
+                msg = "not %s: one base off" % name
+                self.floaters.add(float_x(inp.mouse[0], msg, 15), inp.mouse[1] - 20, msg, RED, 15)
                 return
         self.floaters.add(inp.mouse[0], inp.mouse[1] - 20, "-%d" % self.penalty, RED, 15)
 
@@ -141,7 +142,7 @@ class SitesStage(Stage):
             found = sum(1 for x in self.sites if x[2])
             self.feedback = ["Found %d of %d sites before time ran out." % (found, len(self.sites))]
             if self.wrong:
-                self.feedback.append("%d clicks on ordinary sequence: read the 6 letters before you click." % self.wrong)
+                self.feedback.append("%d clicks on ordinary sequence: read the letters before you click." % self.wrong)
 
     def render(self, s):
         gfx.bench(s, SAND)
@@ -176,7 +177,7 @@ class SitesStage(Stage):
                 x = self.x0 + (col + 1) * self.cw
                 y = self.y0 + row * self.lh
                 gfx.line(s, INK, (x, y - 4), (x, y + 23), 2)
-                draw_text(s, site[1], (x + self.cw * 2.0, y - 15), 10, mix(SITES[site[1]][1], INK, 0.45), center=True, bold=True)
+                draw_text(s, site[1], (x + self.cw * 2.0, y - 17), 11, mix(SITES[site[1]][1], INK, 0.45), center=True, bold=True)
         side = pygame.Rect(640, TOP + 12, 300, BOTTOM - TOP - 24)
         gfx.card(s, side, (250, 248, 240))
         draw_text(s, "Enzymes", (790, TOP + 26), 18, INK, center=True, bold=True)
@@ -260,11 +261,18 @@ OVERHANGS = [
 ]
 
 
+def draw_site(s, r, label):
+    """Enzyme name above its recognition site (^ marks the cut), centred in the card."""
+    name, site = label.split()
+    draw_text(s, name, (r.centerx, r.centery - 20), 16, INK, center=True, bold=True)
+    draw_text(s, site, (r.centerx, r.centery + 1), 16, INK_SOFT, center=True, bold=True, mono=True)
+
+
 def draw_end(s, r, label):
     """The left end of a DNA fragment after cutting: top strand 5'->3', bottom 3'->5'."""
     cw = 13
     x0 = r.x + 40
-    yt, yb = r.y + 10, r.y + 30
+    yt, yb = r.y + 7, r.y + 25
     kind, _, bases = label.partition(" ")
     if label == "blunt":
         kind, bases = "blunt", ""
@@ -282,7 +290,7 @@ def draw_end(s, r, label):
         for k, ch in enumerate(bases[::-1]):
             gfx.rrect(s, (x0 + k * cw, yb, cw - 1, 14), mix(TURQ, WHITE, 0.6), mix(TURQ, INK, 0.3), 1, 3, 0.1)
             draw_text(s, ch, (x0 + k * cw + 2, yb - 2), 14, INK, bold=True, mono=True)
-    draw_text(s, label + (" overhang" if kind != "blunt" else " end"), (r.centerx + 20, r.bottom - 22), 13, INK_SOFT, center=True, bold=True)
+    draw_text(s, label + (" overhang" if kind != "blunt" else " end"), (r.centerx + 20, r.bottom - 20), 13, INK_SOFT, center=True, bold=True)
 
 
 # ------------------------------------------------------------------ calc: insert amount
@@ -302,7 +310,7 @@ def ratio_problem(rng):
         draw_text(s, "%d bp insert" % ins, (r.x + 210, cy + 18), 14, INK, bold=True)
     return dict(text="Vector: %d bp, %d ng in the reaction. Insert: %d bp. You want a %d:1 molar ratio of insert to vector. How many ng of insert do you add?" % (vec, ng, ins, ratio),
                 answer=ans, unit="ng", tol=0.03, pic=pic,
-                why="ng insert = ng vector x (insert bp / vector bp) x ratio = %d x %d / %d x %d." % (ng, ins, vec, ratio))
+                why="ng insert = ng vector × (insert bp / vector bp) × ratio = %d x %d / %d x %d." % (ng, ins, vec, ratio))
 
 
 TECH = dict(
@@ -331,7 +339,7 @@ TECH = dict(
         ("quiz", dict(title="Plan the cloning", questions=[map_question] + STATIC_CLONE_Q, n=3,
                       instr="Choose the enzymes for directional cloning, then answer two questions on ligation.")),
         ("match", dict(title="Sticky ends", pairs=OVERHANGS, n=5, left_title="Enzyme and cut site", right_title="End it leaves",
-                       draw_right=draw_end, instr="Read where each enzyme cuts (^) and connect it to the end it leaves. The red strand is 5' to 3'.")),
+                       draw_left=draw_site, draw_right=draw_end, instr="Read where each enzyme cuts (^) and connect it to the end it leaves. The red strand is 5' to 3'.")),
         ("calc", dict(title="Set up the ligation", problems=[ratio_problem, ratio_problem], n=2,
                       instr="Work out how much insert to add for the molar ratio you want.")),
     ],

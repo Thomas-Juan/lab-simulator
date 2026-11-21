@@ -205,7 +205,7 @@ class CountCells(Stage):
             if self.reveal == 0:
                 self.round += 1
                 if self.round >= self.rounds:
-                    fb = ["Square %d: you marked %d, the right count was %d." % (i + 1, m, n) for i, (m, n, _, _) in enumerate(self.data)]
+                    fb = ["Square %d: you marked %d; the right count was %d." % (i + 1, m, n) for i, (m, n, _, _) in enumerate(self.data)]
                     nb = sum(d[3] for d in self.data)
                     if nb:
                         fb.append("%d cell%s on the borders handled wrongly: count the top and left lines only, so no cell is counted "
